@@ -19,9 +19,14 @@ For example: manager addTeam "Team A"
 			fmt.Println("Please insert only NAME(of team)")
 			return
 		}
-		name := args[0]
 
-		err := teamMongo.AddTeam(name)
+		name, err := validationString(args[0])
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		err = teamMongo.AddTeam(name)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -88,9 +93,13 @@ For example: manager delTeam 6156b66f75697f7a901022f1`,
 			return
 		}
 
-		var id = args[0]
+		id, err := validationString(args[0])
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 
-		err := teamMongo.DeleteTeamById(id)
+		err = teamMongo.DeleteTeamById(id)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -111,11 +120,15 @@ manager showAllTeamMember TEAM_ID`,
 			return
 		}
 
-		var id = args[0]
+		id, err := validationString(args[0])
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 
-		team, err1 := teamMongo.ShowAllTeamMember(id)
-		if err1 != nil {
-			fmt.Println(err1.Error())
+		team, err := teamMongo.ShowAllTeamMember(id)
+		if err != nil {
+			fmt.Println(err.Error())
 			return
 		}
 
@@ -146,10 +159,19 @@ manager addTeamMember TEAM_ID MEMBER_ID
 			return
 		}
 
-		tId := args[0]
-		mId := args[1]
+		tId, err := validationString(args[0])
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 
-		err := teamMongo.AddTeamMember(tId, mId)
+		mId, err := validationString(args[1])
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		err = teamMongo.AddTeamMember(tId, mId)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -171,10 +193,19 @@ manager delTeamMember TEAM_ID MEMBER_ID
 			return
 		}
 
-		tId := args[0]
-		mId := args[1]
+		tId, err := validationString(args[0])
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 
-		err := teamMongo.DelTeamMemberById(tId, mId)
+		mId, err := validationString(args[1])
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		err = teamMongo.DelTeamMemberById(tId, mId)
 		if err != nil {
 			fmt.Println(err.Error())
 			return

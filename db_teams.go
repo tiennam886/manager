@@ -36,6 +36,7 @@ func (h *TeamMongo) InitTeamRepo() error {
 	}
 
 	h.collection = db.Collection(teamCollection)
+
 	return nil
 }
 
@@ -82,6 +83,7 @@ func (h *TeamMongo) ShowAllTeam(page int, limit int) ([]Teams, int64, error) {
 	if err != nil {
 		return nil, 0, err
 	}
+
 	return teams, total, nil
 }
 

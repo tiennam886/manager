@@ -2,9 +2,9 @@ package manager
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"strconv"
-	"time"
+
+	"github.com/spf13/cobra"
 )
 
 var addEmpCmd = &cobra.Command{
@@ -20,19 +20,9 @@ For example: manager addEmp "Tran Nam" 0 "2000-01-01"`,
 			return
 		}
 
-		var name = args[0]
-		var date = args[2]
-
-		gender, err := strconv.Atoi(args[1])
-		if err != nil || (gender != 1 && gender != 0) {
-			fmt.Println("Please insert GENDER as 0 for male, 1 for female ")
-			return
-		}
-
-		const layoutISO = "2006-01-02"
-		_, err = time.Parse(layoutISO, date)
+		name, gender, date, err := validationAddEmployer(args[0], args[1], args[2])
 		if err != nil {
-			fmt.Println("Date not in format yyyy-MM-DD")
+			fmt.Println(err.Error())
 			return
 		}
 
@@ -79,9 +69,7 @@ manager showAllEmp 1 15`,
 			fmt.Println(err.Error())
 			return
 		}
-		//for employer : range employers{
-		//
-		//}
+
 		fmt.Printf("\nList of all Employers in page: %v, limt: %v, total: %v\n", page, limit, total)
 		fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
 		for i := range employers {
@@ -105,9 +93,13 @@ For example: manager addEmp 6156b66f75697f7a901022f1`,
 			return
 		}
 
-		var id = args[0]
+		id, err := validationString(args[0])
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 
-		err := employerMongo.DeleteEmployer(id)
+		err = employerMongo.DeleteEmployer(id)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -130,20 +122,15 @@ For example: manager updateEmp 6156b66f75697f7a901022f1 "Tran Nam" 0 "2000-01-01
 			return
 		}
 
-		var id = args[0]
-		var name = args[1]
-		var date = args[3]
-
-		gender, err := strconv.Atoi(args[2])
-		if err != nil || (gender != 1 && gender != 0) {
-			fmt.Println("Please update GENDER as 0 for male, 1 for female ")
+		id, err := validationString(args[0])
+		if err != nil {
+			fmt.Println(err.Error())
 			return
 		}
 
-		const layoutISO = "2006-01-02"
-		_, err = time.Parse(layoutISO, date)
+		name, gender, date, err := validationAddEmployer(args[1], args[2], args[3])
 		if err != nil {
-			fmt.Println("Date not in format yyyy-MM-DD")
+			fmt.Println(err.Error())
 			return
 		}
 

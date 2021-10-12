@@ -55,6 +55,7 @@ func GetEmployers(c *gin.Context) {
 
 func PostEmployer(c *gin.Context) {
 	var employer *Employer
+	var err error
 
 	if err := c.BindJSON(&employer); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{
@@ -65,8 +66,18 @@ func PostEmployer(c *gin.Context) {
 		return
 	}
 
+	employer.Name, employer.Gender, employer.DoB, err = validationAddEmployer(employer.Name, string(rune(employer.Gender)), employer.DoB)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"data":    employer,
+			"message": err.Error(),
+		})
+		return
+	}
+
 	//insert the newly created object into mongodb
-	err := employerMongo.AddEmployer(employer.Name, employer.Gender, employer.DoB)
+	err = employerMongo.AddEmployer(employer.Name, employer.Gender, employer.DoB)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -86,9 +97,16 @@ func PostEmployer(c *gin.Context) {
 }
 
 func DelEmployerByID(c *gin.Context) {
-	var id = c.Param("id")
+	id, err := validationString(c.Param("id"))
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"data":    id,
+			"message": err.Error()})
+		return
+	}
 
-	err := employerMongo.DeleteEmployer(id)
+	err = employerMongo.DeleteEmployer(id)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -106,7 +124,15 @@ func DelEmployerByID(c *gin.Context) {
 
 func UpdateEmployerByID(c *gin.Context) {
 	var employer *Employer
-	var id = c.Param("id")
+
+	id, err := validationString(c.Param("id"))
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"data":    id,
+			"message": err.Error()})
+		return
+	}
 
 	if err := c.BindJSON(&employer); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{
@@ -117,7 +143,9 @@ func UpdateEmployerByID(c *gin.Context) {
 		return
 	}
 
-	err := employerMongo.UpdateEmployer(id, employer.Name, employer.Gender, employer.DoB)
+	employer.Name, employer.Gender, employer.DoB, err = validationAddEmployer(employer.Name, string(rune(employer.Gender)), employer.DoB)
+
+	err = employerMongo.UpdateEmployer(id, employer.Name, employer.Gender, employer.DoB)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"success": false,

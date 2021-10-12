@@ -34,6 +34,8 @@ func Execute() {
 }
 
 func init() {
+	cobra.OnInitialize()
+	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	err := employerMongo.InitEmployerRepo()
 	if err != nil {
@@ -48,6 +50,7 @@ func init() {
 	}
 
 	rootCmd.Flags().StringVar(&mode, "mode", "", "Set Server mode with --mode=server")
+
 	// cli handles employers
 	rootCmd.AddCommand(addEmpCmd)
 	rootCmd.AddCommand(showAllEmp)
