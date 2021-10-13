@@ -12,19 +12,19 @@ var serverPort = "8080"
 func serverMode() error {
 	router := gin.Default()
 
-	router.GET("/employers", GetEmployers)
-	router.GET("/teams", GetTeams)
-	router.GET("/teams/:id", GetAllMemberInTeam)
+	router.GET("/employee", GetEmployers)
+	router.GET("/team", GetTeams)
+	router.GET("/team/:id", GetAllMemberInTeam)
 
-	router.POST("/employers", PostEmployer)
-	router.POST("/teams", PostTeam)
+	router.POST("/employee", PostEmployer)
+	router.POST("/team", PostTeam)
 
-	router.DELETE("/employers/:id", DelEmployerByID)
-	router.DELETE("/teams/:id", DelTeamByID)
-	router.DELETE("/teams/:id/employers/:mid", DelMemberInTeamByID)
+	router.DELETE("/employee/:id", DelEmployerByID)
+	router.DELETE("/team/:id", DelTeamByID)
+	router.DELETE("/team/:id/employee/:mid", DelMemberInTeamByID)
 
-	router.PATCH("/employers/:id", UpdateEmployerByID)
-	router.PATCH("/teams/:id/employers/:mid", AddMemberToTeamByID)
+	router.PATCH("/employee/:id", UpdateEmployerByID)
+	router.PATCH("/team/:id/employee/:mid", AddMemberToTeamByID)
 
 	var addr string
 	addr = fmt.Sprintf("%s:%s", serverHost, serverPort)

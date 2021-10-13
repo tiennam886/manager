@@ -7,7 +7,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -20,21 +19,7 @@ type Employer struct {
 	DoB    string             `bson:"dob"`
 }
 
-type EmployerMongo struct {
-	collection *mongo.Collection
-}
-
-func (h *EmployerMongo) InitEmployerRepo() error {
-	db, err := ConnectDB(uri, database)
-	if err != nil {
-		return err
-	}
-
-	h.collection = db.Collection(employerCollection)
-	return nil
-}
-
-func (h *EmployerMongo) AddEmployer(name string, gender int, date string) error {
+func dbAddEmployer(name string, gender int, date string) error {
 	var ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 
 	employer := bson.M{
@@ -43,7 +28,12 @@ func (h *EmployerMongo) AddEmployer(name string, gender int, date string) error 
 		"dob":    date,
 	}
 
-	resp, err := h.collection.InsertOne(ctx, employer)
+	eCol, err := connectCol(uri, database, employerCollection)
+	if err != nil {
+		return err
+	}
+
+	resp, err := eCol.InsertOne(ctx, employer)
 	if err != nil {
 		return err
 	}
@@ -52,7 +42,7 @@ func (h *EmployerMongo) AddEmployer(name string, gender int, date string) error 
 	return nil
 }
 
-func (h *EmployerMongo) ShowAll(page int, limit int) ([]Employer, int64, error) {
+func dbShowAllEmployee(page int, limit int) ([]Employer, int64, error) {
 	var ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 
 	filter := bson.M{}
@@ -61,12 +51,17 @@ func (h *EmployerMongo) ShowAll(page int, limit int) ([]Employer, int64, error) 
 	findOptions.SetSkip((int64(page) - 1) * int64(limit))
 	findOptions.SetLimit(int64(limit))
 
-	total, err := h.collection.CountDocuments(ctx, filter)
+	eCol, err := connectCol(uri, database, employerCollection)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	cursor, err := h.collection.Find(ctx, filter, findOptions)
+	total, err := eCol.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	cursor, err := eCol.Find(ctx, filter, findOptions)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -81,15 +76,13 @@ func (h *EmployerMongo) ShowAll(page int, limit int) ([]Employer, int64, error) 
 
 }
 
-func (h *EmployerMongo) UpdateEmployer(id string, newName string, newGender int, newBoB string) error {
+func dbUpdateEmployer(id string, newName string, newGender int, newBoB string) error {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
-	objId, err1 := primitive.ObjectIDFromHex(id)
-	if err1 != nil {
+	objId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
 		return fmt.Errorf("Employer_ID %s was invalid\n", id)
 	}
-
-	filter := bson.M{"_id": objId}
 
 	newEmp := Employer{
 		ID:     objId,
@@ -101,7 +94,11 @@ func (h *EmployerMongo) UpdateEmployer(id string, newName string, newGender int,
 		"$set": newEmp,
 	}
 
-	_, err := h.collection.UpdateOne(ctx, filter, update)
+	eCol, err := connectCol(uri, database, employerCollection)
+	if err != nil {
+		return err
+	}
+	_, err = eCol.UpdateOne(ctx, bson.M{"_id": objId}, update)
 	if err != nil {
 		return err
 	}
@@ -111,22 +108,50 @@ func (h *EmployerMongo) UpdateEmployer(id string, newName string, newGender int,
 
 }
 
-func (h *EmployerMongo) DeleteEmployer(id string) error {
+func dbDeleteEmployer(id string) error {
+	var employer *Employer
+
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
-	objId, err1 := primitive.ObjectIDFromHex(id)
-	if err1 != nil {
+	objId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
 		return fmt.Errorf("Employer_ID %s was invalid\n", id)
 	}
 
 	filter := bson.M{"_id": objId}
 
-	_, err := h.collection.DeleteOne(ctx, filter)
+	eCol, err := connectCol(uri, database, employerCollection)
+	if err != nil {
+		return err
+	}
+
+	err = eCol.FindOne(ctx, filter).Decode(&employer)
 	if err != nil {
 		return fmt.Errorf("Employer_ID %s does not exist\n", id)
+	}
+
+	_, err = eCol.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
 	}
 
 	fmt.Printf("Employer %s was deleted\n", id)
 	return nil
 
+}
+
+func dbFindEmployeeID(id primitive.ObjectID) error {
+	var employer Employer
+
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	eCol, err := connectCol(uri, database, employerCollection)
+	if err != nil {
+		return err
+	}
+	err = eCol.FindOne(ctx, bson.M{"_id": id}).Decode(&employer)
+	if err != nil {
+		return fmt.Errorf("Employers with ID %s does not exist.\n", id)
+	}
+	return nil
 }

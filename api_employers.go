@@ -2,6 +2,7 @@ package manager
 
 import (
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"math"
 	"net/http"
 	"strconv"
@@ -10,7 +11,6 @@ import (
 )
 
 func GetEmployers(c *gin.Context) {
-
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
 		page = 1
@@ -21,7 +21,7 @@ func GetEmployers(c *gin.Context) {
 		limit = 10
 	}
 
-	employers, total, err := employerMongo.ShowAll(page, limit)
+	employers, total, err := dbShowAllEmployee(page, limit)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{
@@ -77,7 +77,7 @@ func PostEmployer(c *gin.Context) {
 	}
 
 	//insert the newly created object into mongodb
-	err = employerMongo.AddEmployer(employer.Name, employer.Gender, employer.DoB)
+	err = dbAddEmployer(employer.Name, employer.Gender, employer.DoB)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -106,7 +106,7 @@ func DelEmployerByID(c *gin.Context) {
 		return
 	}
 
-	err = employerMongo.DeleteEmployer(id)
+	err = dbDeleteEmployer(id)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -145,7 +145,7 @@ func UpdateEmployerByID(c *gin.Context) {
 
 	employer.Name, employer.Gender, employer.DoB, err = validationAddEmployer(employer.Name, string(rune(employer.Gender)), employer.DoB)
 
-	err = employerMongo.UpdateEmployer(id, employer.Name, employer.Gender, employer.DoB)
+	err = dbUpdateEmployer(id, employer.Name, employer.Gender, employer.DoB)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -162,4 +162,15 @@ func UpdateEmployerByID(c *gin.Context) {
 	})
 
 	return
+}
+
+func response(success bool, data Employer, msg string) map[string]interface{} {
+
+	res := bson.M{
+		"success": success,
+		"data":    data,
+		"message": msg,
+	}
+
+	return res
 }

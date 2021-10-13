@@ -9,10 +9,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-var uri string = "mongodb://localhost:27017"
+var uri = "mongodb://localhost:27017"
 var database = "local"
 
-func ConnectDB(uri string, database string) (*mongo.Database, error) {
+func connectCol(uri string, database string, col string) (*mongo.Collection, error) {
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
@@ -32,5 +32,5 @@ func ConnectDB(uri string, database string) (*mongo.Database, error) {
 		return nil, err
 	}
 
-	return client.Database(database), nil
+	return client.Database(database).Collection(col), nil
 }

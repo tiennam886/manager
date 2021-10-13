@@ -9,7 +9,6 @@ import (
 )
 
 func GetTeams(c *gin.Context) {
-
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
 		page = 1
@@ -20,8 +19,7 @@ func GetTeams(c *gin.Context) {
 		limit = 10
 	}
 
-	teams, total, err := teamMongo.ShowAllTeam(page, limit)
-
+	teams, total, err := dbGetAllTeams(page, limit)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{
 			"success":   false,
@@ -39,6 +37,7 @@ func GetTeams(c *gin.Context) {
 	if last < 1 && total > 0 {
 		last = 1
 	}
+
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"success":   true,
 		"data":      teams,
@@ -47,12 +46,10 @@ func GetTeams(c *gin.Context) {
 		"last_page": last,
 		"limit":     limit,
 	})
-
 	return
 }
 
 func GetAllMemberInTeam(c *gin.Context) {
-
 	id, err := validationString(c.Param("id"))
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{
@@ -62,7 +59,7 @@ func GetAllMemberInTeam(c *gin.Context) {
 		return
 	}
 
-	team, err := teamMongo.ShowAllTeamMember(id)
+	team, err := dbShowAllMemberInTeam(id)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{
 			"success": false,
@@ -77,14 +74,14 @@ func GetAllMemberInTeam(c *gin.Context) {
 		"data":    team,
 		"message": "All member in team has showed",
 	})
-
 	return
-
 }
 
 func PostTeam(c *gin.Context) {
-	var team *Teams
-	var err error
+	var (
+		team *Teams
+		err  error
+	)
 
 	if err := c.BindJSON(&team); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{
@@ -105,7 +102,7 @@ func PostTeam(c *gin.Context) {
 	}
 
 	//insert the newly created object into mongodb
-	err = teamMongo.AddTeam(team.Team)
+	err = dbAddTeam(team.Team)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -124,7 +121,6 @@ func PostTeam(c *gin.Context) {
 }
 
 func DelTeamByID(c *gin.Context) {
-
 	id, err := validationString(c.Param("id"))
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{
@@ -134,7 +130,7 @@ func DelTeamByID(c *gin.Context) {
 		return
 	}
 
-	err = teamMongo.DeleteTeamById(id)
+	err = dbDeleteTeamById(id)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -147,12 +143,10 @@ func DelTeamByID(c *gin.Context) {
 		"success": true,
 		"data":    id,
 		"message": fmt.Sprintf("Hash with ID %s was deleted", id)})
-
 	return
 }
 
 func AddMemberToTeamByID(c *gin.Context) {
-
 	id, err := validationString(c.Param("id"))
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{
@@ -171,7 +165,7 @@ func AddMemberToTeamByID(c *gin.Context) {
 		return
 	}
 
-	err = teamMongo.AddTeamMember(id, memberId)
+	err = dbAddTeamMember(id, memberId)
 	if err != nil {
 		fmt.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Update failed "})
@@ -183,11 +177,9 @@ func AddMemberToTeamByID(c *gin.Context) {
 		"data":    id,
 		"message": fmt.Sprintf("Add employer with id: %s in team with id: %s successfully", memberId, id),
 	})
-	return
 }
 
 func DelMemberInTeamByID(c *gin.Context) {
-
 	id, err := validationString(c.Param("id"))
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{
@@ -206,7 +198,7 @@ func DelMemberInTeamByID(c *gin.Context) {
 		return
 	}
 
-	err = teamMongo.DelTeamMemberById(id, memberId)
+	err = dbDelTeamMemberById(id, memberId)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -221,5 +213,4 @@ func DelMemberInTeamByID(c *gin.Context) {
 		"data":    id,
 		"message": fmt.Sprintf("Delete employer with id: %s in team with id: %s successfully", memberId, id),
 	})
-	return
 }

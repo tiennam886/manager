@@ -10,8 +10,8 @@ var addTeam = &cobra.Command{
 	Use:   "addTeam",
 	Short: "Adding a Team with its name",
 	Long: `Adding a Team with its name with cli structure:
-manager addTeam NAME
-For example: manager addTeam "Team A"
+app addTeam NAME
+For example: app addTeam "Team A"
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -26,7 +26,7 @@ For example: manager addTeam "Team A"
 			return
 		}
 
-		err = teamMongo.AddTeam(name)
+		err = dbAddTeam(name)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -64,7 +64,7 @@ var showAllTeam = &cobra.Command{
 			}
 		}
 
-		teams, total, err1 := teamMongo.ShowAllTeam(page, limit)
+		teams, total, err1 := dbGetAllTeams(page, limit)
 		if err1 != nil {
 			fmt.Println(err.Error())
 			return
@@ -85,8 +85,8 @@ var delTeamCmd = &cobra.Command{
 	Use:   "delTeam",
 	Short: "Deleting a Team by ID",
 	Long: `Deleting a Team by ID with structure: 
-manager delTeam ID 
-For example: manager delTeam 6156b66f75697f7a901022f1`,
+app delTeam ID 
+For example: app delTeam 6156b66f75697f7a901022f1`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Println("Please insert team ID to delete ")
@@ -99,7 +99,7 @@ For example: manager delTeam 6156b66f75697f7a901022f1`,
 			return
 		}
 
-		err = teamMongo.DeleteTeamById(id)
+		err = dbDeleteTeamById(id)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -113,7 +113,7 @@ var showAllTeamMember = &cobra.Command{
 	Use:   "showAllTeamMember",
 	Short: "Showing all member in a team with id",
 	Long: `Showing all member in a team with cli structure:
-manager showAllTeamMember TEAM_ID`,
+app showAllTeamMember TEAM_ID`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Println("Please update by ID ")
@@ -126,15 +126,15 @@ manager showAllTeamMember TEAM_ID`,
 			return
 		}
 
-		team, err := teamMongo.ShowAllTeamMember(id)
+		team, err := dbShowAllMemberInTeam(id)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
 
-		fmt.Printf("List Employers in: %s with id: %s\n\n", team[0].Team, team[0].ID.Hex())
+		fmt.Printf("List Employers in: %s with id: %s\n\n", team.Team, team.ID.Hex())
 
-		employers := team[0].Member
+		employers := team.Member
 
 		fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
 		for i := range employers {
@@ -151,11 +151,11 @@ var addTeamMember = &cobra.Command{
 	Use:   "addTeamMember",
 	Short: "adding an employer ID to a Team with its ID",
 	Long: `adding an employer ID to a Team with its ID as cli structure:
-manager addTeamMember TEAM_ID MEMBER_ID
+app addTeamMember TEAM_ID MEMBER_ID
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 2 {
-			fmt.Println("Only required 2 args as: manager addTeamMember TEAM_ID MEMBER_ID ")
+			fmt.Println("Only required 2 args as: app addTeamMember TEAM_ID MEMBER_ID ")
 			return
 		}
 
@@ -171,7 +171,7 @@ manager addTeamMember TEAM_ID MEMBER_ID
 			return
 		}
 
-		err = teamMongo.AddTeamMember(tId, mId)
+		err = dbAddTeamMember(tId, mId)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -185,11 +185,11 @@ var delTeamMember = &cobra.Command{
 	Use:   "delTeamMember",
 	Short: "deleting an employer ID to a Team with its ID",
 	Long: `deleting an employer ID to a Team with its ID as cli structure:
-manager delTeamMember TEAM_ID MEMBER_ID
+app delTeamMember TEAM_ID MEMBER_ID
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 2 {
-			fmt.Println("Only required 2 args as: manager delTeamMember TEAM_ID MEMBER_ID ")
+			fmt.Println("Only required 2 args as: app delTeamMember TEAM_ID MEMBER_ID ")
 			return
 		}
 
@@ -205,7 +205,7 @@ manager delTeamMember TEAM_ID MEMBER_ID
 			return
 		}
 
-		err = teamMongo.DelTeamMemberById(tId, mId)
+		err = dbDelTeamMemberById(tId, mId)
 		if err != nil {
 			fmt.Println(err.Error())
 			return

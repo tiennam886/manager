@@ -7,11 +7,9 @@ import (
 )
 
 var mode string
-var employerMongo EmployerMongo
-var teamMongo TeamMongo
 
 var rootCmd = &cobra.Command{
-	Use:   "manager",
+	Use:   "app",
 	Short: "An Application for Employers Management",
 	Long: `This Application allows you to execute CRUD task that is connected to the DB 
 and a Server for API`,
@@ -36,18 +34,6 @@ func Execute() {
 func init() {
 	cobra.OnInitialize()
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
-	err := employerMongo.InitEmployerRepo()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	err = teamMongo.InitTeamRepo()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
 
 	rootCmd.Flags().StringVar(&mode, "mode", "", "Set Server mode with --mode=server")
 

@@ -2,6 +2,7 @@ package manager
 
 import (
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
 	"time"
 )
@@ -50,4 +51,21 @@ func validationAddEmployer(name string, gender string, date string) (string, int
 
 	return n, g, d, nil
 
+}
+
+func validationObjectID(teamId string, memId string) (primitive.ObjectID, primitive.ObjectID, error) {
+	var (
+		objId, memberId primitive.ObjectID
+		err             error
+	)
+
+	objId, err = primitive.ObjectIDFromHex(teamId)
+	if err != nil {
+		return objId, memberId, fmt.Errorf("TEAM_ID %s was invalid\n", teamId)
+	}
+	memberId, err = primitive.ObjectIDFromHex(memId)
+	if err != nil {
+		return objId, memberId, fmt.Errorf("Employer_ID %s was invalid", memId)
+	}
+	return objId, memberId, nil
 }
