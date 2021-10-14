@@ -38,20 +38,20 @@ func apiPostEmployer(c *gin.Context) {
 	var employer *EmployerPost
 
 	if err := c.BindJSON(&employer); err != nil {
-		responseBadRequest(c, employer.ID.Hex(), err)
+		responseBadRequest(c, "", err)
 		return
 	}
 
 	name, gender, dob, err := validationAddEmployer(employer.Name, employer.Gender, employer.DoB)
 	if err != nil {
-		responseBadRequest(c, employer.ID.Hex(), err)
+		responseBadRequest(c, "", err)
 		return
 	}
 
 	//insert the newly created object into mongodb
 	err = dbAddEmployer(name, gender, dob)
 	if err != nil {
-		responseInternalServer(c, employer.ID.Hex(), err)
+		responseInternalServer(c, "", err)
 		return
 	}
 

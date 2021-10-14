@@ -32,7 +32,7 @@ func validationGender(gender string) (int, error) {
 		"female": 1,
 	}
 	if gender != "male" && gender != "female" {
-		return -1, fmt.Errorf("not %s, only male or female", gender)
+		return 2, fmt.Errorf("not %s, only male or female", gender)
 	}
 	return genMap[gender], nil
 }
@@ -107,6 +107,6 @@ func validationArgs(args []string) (int, int, error) {
 }
 
 func convertNumToGender(a int) string {
-	genInt := []string{"male", "female"}
+	genInt := []string{"male", "female", "invalid"}
 	return genInt[a]
 }
