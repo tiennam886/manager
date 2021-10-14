@@ -3,7 +3,6 @@ package manager
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
 var addTeam = &cobra.Command{
@@ -14,7 +13,6 @@ app addTeam NAME
 For example: app addTeam "Team A"
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if len(args) != 1 {
 			fmt.Println("Please insert only NAME(of team)")
 			return
@@ -31,9 +29,6 @@ For example: app addTeam "Team A"
 			fmt.Println(err.Error())
 			return
 		}
-
-		return
-
 	},
 }
 
@@ -42,26 +37,10 @@ var showAllTeam = &cobra.Command{
 	Short: "Show a list of all Teams",
 	Long:  `Show a list of all teams with number of total, page and limit`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var err error
-		page := 1
-		limit := 10
-		numArgs := len(args)
-
-		if numArgs != 2 && numArgs != 0 {
-			fmt.Println("Too many args, it has only 0 or 2 args")
+		page, limit, err := validationArgs(args)
+		if err != nil {
+			fmt.Println(err.Error())
 			return
-		}
-
-		if numArgs == 2 {
-			page, err = strconv.Atoi(args[0])
-			if err != nil {
-				page = 1
-			}
-
-			limit, err = strconv.Atoi(args[1])
-			if err != nil {
-				limit = 10
-			}
 		}
 
 		teams, total, err1 := dbGetAllTeams(page, limit)
@@ -76,8 +55,6 @@ var showAllTeam = &cobra.Command{
 			fmt.Printf("%s\t%s\n", teams[i].ID.Hex(), teams[i].Team)
 		}
 		fmt.Println("\nAll Employers were showed")
-
-		return
 	},
 }
 
@@ -93,19 +70,11 @@ For example: app delTeam 6156b66f75697f7a901022f1`,
 			return
 		}
 
-		id, err := validationString(args[0])
+		err = dbDeleteTeamById(args[0])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-
-		err = dbDeleteTeamById(id)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		return
 	},
 }
 
@@ -138,12 +107,10 @@ app showAllTeamMember TEAM_ID`,
 
 		fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
 		for i := range employers {
-			fmt.Printf("%s\t%s\t%v\t%s\n", employers[i].ID.Hex(), employers[i].Name, employers[i].Gender, employers[i].DoB)
+			fmt.Printf("%s\t%s\t%v\t%s\n",
+				employers[i].ID.Hex(), employers[i].Name, convertNumToGender(employers[i].Gender), employers[i].DoB)
 		}
 		fmt.Println("\nAll Employers were showed")
-
-		return
-
 	},
 }
 
@@ -159,25 +126,11 @@ app addTeamMember TEAM_ID MEMBER_ID
 			return
 		}
 
-		tId, err := validationString(args[0])
+		err = dbAddTeamMember(args[0], args[1])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-
-		mId, err := validationString(args[1])
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		err = dbAddTeamMember(tId, mId)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		return
 	},
 }
 
@@ -193,24 +146,30 @@ app delTeamMember TEAM_ID MEMBER_ID
 			return
 		}
 
-		tId, err := validationString(args[0])
+		err = dbDelTeamMemberById(args[0], args[1])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
+	},
+}
 
-		mId, err := validationString(args[1])
+var changeTeamName = &cobra.Command{
+	Use:   "changeTeamName",
+	Short: "Change name of a team with ID",
+	Long: `Changing name of a team with its ID as cli structure:
+app changeTeamName TEAM_ID NEW_NAME`,
+
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 2 {
+			fmt.Println("Only required 2 args as: app delTeamMember TEAM_ID MEMBER_ID ")
+			return
+		}
+
+		err = dbUpdateTeam(args[0], args[1])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-
-		err = dbDelTeamMemberById(tId, mId)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		return
 	},
 }

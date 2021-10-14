@@ -21,15 +21,7 @@ func GetTeams(c *gin.Context) {
 
 	teams, total, err := dbGetAllTeams(page, limit)
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{
-			"success":   false,
-			"data":      nil,
-			"total":     0,
-			"page":      0,
-			"last_page": 0,
-			"limit":     0,
-			"message":   err.Error(),
-		})
+		responseAllNotFound(c, err)
 		return
 	}
 
@@ -37,44 +29,27 @@ func GetTeams(c *gin.Context) {
 	if last < 1 && total > 0 {
 		last = 1
 	}
-
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      teams,
-		"total":     total,
-		"page":      page,
-		"last_page": last,
-		"limit":     limit,
-	})
-	return
+	responseAllTeamOK(c, teams, total, page, last, limit)
 }
 
 func GetAllMemberInTeam(c *gin.Context) {
 	id, err := validationString(c.Param("id"))
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    id,
-			"message": err.Error()})
+		responseBadRequest(c, c.Param("id"), err)
 		return
 	}
 
 	team, err := dbShowAllMemberInTeam(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{
-			"success": false,
-			"date":    nil,
-			"message": err.Error(),
-		})
+		responseInternalServer(c, id, err)
 		return
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"success": true,
 		"data":    team,
-		"message": "All member in team has showed",
+		"message": "All member in team has showed\n",
 	})
-	return
 }
 
 func PostTeam(c *gin.Context) {
@@ -84,133 +59,93 @@ func PostTeam(c *gin.Context) {
 	)
 
 	if err := c.BindJSON(&team); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"data":    team,
-			"message": err.Error(),
-		})
+		responseBadRequest(c, team.ID.Hex(), err)
 		return
 	}
 
 	team.Team, err = validationString(team.Team)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    nil,
-			"message": err.Error()})
+		responseBadRequest(c, team.ID.Hex(), err)
 		return
 	}
 
 	//insert the newly created object into mongodb
 	err = dbAddTeam(team.Team)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    team,
-			"message": err.Error(),
-		})
+		responseInternalServer(c, team.ID.Hex(), err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"success": true,
-		"data":    team,
-		"message": "Employer was created",
-	})
-	return
+	responseTeamCreated(c, team, "Employer was created\n")
 }
 
 func DelTeamByID(c *gin.Context) {
 	id, err := validationString(c.Param("id"))
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    id,
-			"message": err.Error()})
+		responseBadRequest(c, c.Param("id"), err)
 		return
 	}
 
 	err = dbDeleteTeamById(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    id,
-			"message": err.Error()})
+		responseInternalServer(c, id, err)
 		return
 	}
 
-	c.IndentedJSON(http.StatusNoContent, gin.H{
-		"success": true,
-		"data":    id,
-		"message": fmt.Sprintf("Hash with ID %s was deleted", id)})
-	return
+	responseOK(c, id, fmt.Sprintf("Team with ID %s was deleted\n", id))
 }
 
 func AddMemberToTeamByID(c *gin.Context) {
-	id, err := validationString(c.Param("id"))
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    id,
-			"message": err.Error()})
-		return
-	}
-
-	memberId, err := validationString(c.Param("id"))
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    id,
-			"message": err.Error()})
-		return
-	}
+	id := c.Param("id")
+	memberId := c.Param("mid")
 
 	err = dbAddTeamMember(id, memberId)
 	if err != nil {
-		fmt.Println(err)
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Update failed "})
+		responseInternalServer(c, id, err)
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    id,
-		"message": fmt.Sprintf("Add employer with id: %s in team with id: %s successfully", memberId, id),
-	})
+	msg := fmt.Sprintf("Add employer with id: %s in team with id: %s successfully\n", memberId, id)
+	responseOK(c, id, msg)
 }
 
 func DelMemberInTeamByID(c *gin.Context) {
+	id := c.Param("id")
+	mid := c.Param("mid")
+	err = dbDelTeamMemberById(id, mid)
+	if err != nil {
+		responseInternalServer(c, id, err)
+		return
+	}
+
+	msg := fmt.Sprintf("Delete employer with id: %s in team with id: %s successfully\n", mid, id)
+	responseOK(c, id, msg)
+}
+
+func ChangeTeamName(c *gin.Context) {
+	var team *Teams
+
 	id, err := validationString(c.Param("id"))
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    id,
-			"message": err.Error()})
+		responseBadRequest(c, c.Param("id"), err)
 		return
 	}
 
-	memberId, err := validationString(c.Param("id"))
+	if err = c.BindJSON(&team); err != nil {
+		responseBadRequest(c, id, err)
+		return
+	}
+
+	team.Team, err = validationString(team.Team)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    id,
-			"message": err.Error()})
+		responseBadRequest(c, id, err)
 		return
 	}
 
-	err = dbDelTeamMemberById(id, memberId)
+	err = dbUpdateTeam(id, team.Team)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    nil,
-			"message": err.Error(),
-		})
+		responseInternalServer(c, team.ID.Hex(), err)
 		return
 	}
-
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    id,
-		"message": fmt.Sprintf("Delete employer with id: %s in team with id: %s successfully", memberId, id),
-	})
+	responseOK(c, id, "Change name successfully\n")
 }

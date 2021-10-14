@@ -2,11 +2,16 @@ package manager
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var mode string
+var (
+	mode        string
+	employeeCol *mongo.Collection
+	teamCol     *mongo.Collection
+	err         error
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "app",
@@ -33,9 +38,21 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize()
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
+	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.Flags().StringVar(&mode, "mode", "", "Set Server mode with --mode=server")
+
+	teamCol, err = connectCol(uri, database, teamCollection)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	employeeCol, err = connectCol(uri, database, employerCollection)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 
 	// cli handles employers
 	rootCmd.AddCommand(addEmpCmd)
@@ -50,7 +67,5 @@ func init() {
 	rootCmd.AddCommand(showAllTeamMember)
 	rootCmd.AddCommand(addTeamMember)
 	rootCmd.AddCommand(delTeamMember)
-
-	return
-
+	rootCmd.AddCommand(changeTeamName)
 }

@@ -26,11 +26,14 @@ func validationString(s string) (string, error) {
 }
 
 func validationGender(gender string) (int, error) {
-	g, err := strconv.Atoi(gender)
-	if err != nil || (g != 1 && g != 0) {
-		return -1, fmt.Errorf("Please insert GENDER as 0 for male, 1 for female ")
+	genMap := map[string]int{
+		"male":   0,
+		"female": 1,
 	}
-	return g, nil
+	if gender != "male" && gender != "female" {
+		return -1, fmt.Errorf("not %s, only male or female", gender)
+	}
+	return genMap[gender], nil
 }
 
 func validationAddEmployer(name string, gender string, date string) (string, int, string, error) {
@@ -59,6 +62,16 @@ func validationObjectID(teamId string, memId string) (primitive.ObjectID, primit
 		err             error
 	)
 
+	teamId, err = validationString(teamId)
+	if err != nil {
+		return objId, memberId, err
+	}
+
+	memId, err = validationString(memId)
+	if err != nil {
+		return objId, memberId, err
+	}
+
 	objId, err = primitive.ObjectIDFromHex(teamId)
 	if err != nil {
 		return objId, memberId, fmt.Errorf("TEAM_ID %s was invalid\n", teamId)
@@ -68,4 +81,31 @@ func validationObjectID(teamId string, memId string) (primitive.ObjectID, primit
 		return objId, memberId, fmt.Errorf("Employer_ID %s was invalid", memId)
 	}
 	return objId, memberId, nil
+}
+
+func validationArgs(args []string) (int, int, error) {
+	var page, limit int
+	numArgs := len(args)
+
+	if numArgs != 2 && numArgs != 0 {
+		fmt.Println("Too many args, it has only 0 or 2 args")
+		return 1, 10, fmt.Errorf("number of args is %v, it has only 0 or 2 args", numArgs)
+	}
+
+	if numArgs == 2 {
+		page, err = strconv.Atoi(args[0])
+		if err != nil {
+			page = 1
+		}
+		limit, err = strconv.Atoi(args[1])
+		if err != nil {
+			limit = 10
+		}
+	}
+	return page, limit, nil
+}
+
+func convertNumToGender(a int) string {
+	genInt := []string{"male", "female"}
+	return genInt[a]
 }

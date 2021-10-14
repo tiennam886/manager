@@ -2,8 +2,6 @@ package manager
 
 import (
 	"fmt"
-	"strconv"
-
 	"github.com/spf13/cobra"
 )
 
@@ -31,8 +29,6 @@ For example: app addEmp "Tran Nam" 0 "2000-01-01"`,
 			fmt.Println(err.Error())
 			return
 		}
-
-		return
 	},
 }
 
@@ -42,30 +38,13 @@ var showAllEmp = &cobra.Command{
 	Long: `Show a list of all employers with number of total, page and limit with CLI structure
 app showAllEmp 1 15`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var err error
-		page := 1
-		limit := 10
-		numArgs := len(args)
-
-		if numArgs != 2 && numArgs != 0 {
-			fmt.Println("Too many args, it has only 0 or 2 args")
+		page, limit, err := validationArgs(args)
+		if err != nil {
+			fmt.Println(err.Error())
 			return
 		}
-
-		if numArgs == 2 {
-			page, err = strconv.Atoi(args[0])
-			if err != nil {
-				page = 1
-			}
-
-			limit, err = strconv.Atoi(args[1])
-			if err != nil {
-				limit = 10
-			}
-		}
-
-		employers, total, err1 := dbShowAllEmployee(page, limit)
-		if err1 != nil {
+		employers, total, err := dbShowAllEmployee(page, limit)
+		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
@@ -73,11 +52,10 @@ app showAllEmp 1 15`,
 		fmt.Printf("\nList of all Employers in page: %v, limt: %v, total: %v\n", page, limit, total)
 		fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
 		for i := range employers {
-			fmt.Printf("%s\t%s\t%v\t%s\n", employers[i].ID.Hex(), employers[i].Name, employers[i].Gender, employers[i].DoB)
+			fmt.Printf("%s\t%s\t%v\t%s\n",
+				employers[i].ID.Hex(), employers[i].Name, convertNumToGender(employers[i].Gender), employers[i].DoB)
 		}
 		fmt.Println("\nAll Employers were showed")
-
-		return
 	},
 }
 
@@ -104,8 +82,6 @@ For example: app addEmp 6156b66f75697f7a901022f1`,
 			fmt.Println(err.Error())
 			return
 		}
-
-		return
 	},
 }
 
@@ -139,7 +115,5 @@ For example: app updateEmp 6156b66f75697f7a901022f1 "Tran Nam" 0 "2000-01-01"`,
 			fmt.Println(err.Error())
 			return
 		}
-
-		return
 	},
 }

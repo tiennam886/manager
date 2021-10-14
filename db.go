@@ -13,15 +13,12 @@ var uri = "mongodb://localhost:27017"
 var database = "local"
 
 func connectCol(uri string, database string, col string) (*mongo.Collection, error) {
-
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
+	ctx := initCtx()
 	err = client.Connect(ctx)
 	if err != nil {
 		return nil, err
@@ -33,4 +30,9 @@ func connectCol(uri string, database string, col string) (*mongo.Collection, err
 	}
 
 	return client.Database(database).Collection(col), nil
+}
+
+func initCtx() context.Context {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	return ctx
 }

@@ -1,10 +1,7 @@
 package manager
 
 import (
-	"context"
 	"fmt"
-	"time"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -13,43 +10,35 @@ import (
 var teamCollection = "teams"
 
 type Teams struct {
-	ID     primitive.ObjectID   `bson:"_id"`
-	Team   string               `bson:"team"`
-	Member []primitive.ObjectID `bson:"member"`
+	ID     primitive.ObjectID   `bson:"_id" json:"id"`
+	Team   string               `bson:"team" json:"team"`
+	Member []primitive.ObjectID `bson:"member" json:"member"`
 }
 
 type TeamMem struct {
-	ID     primitive.ObjectID `bson:"_id"`
-	Team   string             `bson:"team"`
-	Member []Employer         `bson:"employers"`
+	ID     primitive.ObjectID `bson:"_id" json:"id"`
+	Team   string             `bson:"team" json:"team"`
+	Member []Employer         `bson:"employers" json:"employers"`
 }
 
 func dbAddTeam(name string) error {
-	var ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	ctx := initCtx()
 
 	team := bson.M{
 		"team":   name,
 		"member": []string{},
 	}
-
-	tCol, err := connectCol(uri, database, teamCollection)
-	if err != nil {
-		return err
-	}
-
-	resp, err := tCol.InsertOne(ctx, team)
+	resp, err := teamCol.InsertOne(ctx, team)
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("Insert team with name %s to DB successfully with ID: %s\n", name, resp.InsertedID)
-
 	return nil
-
 }
 
 func dbGetAllTeams(page int, limit int) ([]Teams, int64, error) {
-	var ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	ctx := initCtx()
 
 	filter := bson.M{}
 
@@ -57,17 +46,12 @@ func dbGetAllTeams(page int, limit int) ([]Teams, int64, error) {
 	findOptions.SetSkip((int64(page) - 1) * int64(limit))
 	findOptions.SetLimit(int64(limit))
 
-	tCol, err := connectCol(uri, database, teamCollection)
+	total, err := teamCol.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	total, err := tCol.CountDocuments(ctx, filter)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	cursor, err := tCol.Find(ctx, filter, findOptions)
+	cursor, err := teamCol.Find(ctx, filter, findOptions)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -84,7 +68,7 @@ func dbGetAllTeams(page int, limit int) ([]Teams, int64, error) {
 func dbShowAllMemberInTeam(id string) (TeamMem, error) {
 	var resp []TeamMem
 
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx := initCtx()
 
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -101,12 +85,7 @@ func dbShowAllMemberInTeam(id string) (TeamMem, error) {
 		},
 	}
 
-	tCol, err := connectCol(uri, database, teamCollection)
-	if err != nil {
-		return resp[0], err
-	}
-
-	cursor, err := tCol.Aggregate(ctx, pipeline)
+	cursor, err := teamCol.Aggregate(ctx, pipeline)
 	if err != nil {
 		return resp[0], err
 	}
@@ -163,19 +142,14 @@ func dbDelTeamMemberById(id string, delMemberId string) error {
 }
 
 func dbUpdateTeamMember(objId primitive.ObjectID, memId primitive.ObjectID, method string) error {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx := initCtx()
 
 	filter := bson.M{"_id": objId}
 	update := bson.M{
 		method: bson.M{"member": memId},
 	}
 
-	tCol, err := connectCol(uri, database, teamCollection)
-	if err != nil {
-		return err
-	}
-
-	_, err = tCol.UpdateOne(ctx, filter, update)
+	_, err = teamCol.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
@@ -185,14 +159,9 @@ func dbUpdateTeamMember(objId primitive.ObjectID, memId primitive.ObjectID, meth
 func dbFindTeamID(objId primitive.ObjectID) (Teams, error) {
 	var team Teams
 
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx := initCtx()
 
-	tCol, err := connectCol(uri, database, teamCollection)
-	if err != nil {
-		return team, err
-	}
-
-	err = tCol.FindOne(ctx, bson.M{"_id": objId}).Decode(&team)
+	err = teamCol.FindOne(ctx, bson.M{"_id": objId}).Decode(&team)
 	if err != nil {
 		return team, fmt.Errorf("Team with id:  %s was not found\n", objId)
 	}
@@ -200,7 +169,12 @@ func dbFindTeamID(objId primitive.ObjectID) (Teams, error) {
 }
 
 func dbDeleteTeamById(id string) error {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx := initCtx()
+
+	id, err = validationString(id)
+	if err != nil {
+		return err
+	}
 
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -212,12 +186,7 @@ func dbDeleteTeamById(id string) error {
 		return err
 	}
 
-	tCol, err := connectCol(uri, database, teamCollection)
-	if err != nil {
-		return err
-	}
-
-	_, err = tCol.DeleteOne(ctx, bson.M{"_id": objId})
+	_, err = teamCol.DeleteOne(ctx, bson.M{"_id": objId})
 	if err != nil {
 		return err
 	}
@@ -228,11 +197,20 @@ func dbDeleteTeamById(id string) error {
 }
 
 func dbUpdateTeam(id string, name string) error {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx := initCtx()
 
+	id, err := validationString(id)
+	if err != nil {
+		return err
+	}
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("Employer_ID %s was invalid\n", id)
+	}
+
+	name, err = validationString(name)
+	if err != nil {
+		return err
 	}
 
 	team, err := dbFindTeamID(objId)
@@ -248,15 +226,10 @@ func dbUpdateTeam(id string, name string) error {
 	update := bson.M{
 		"$set": newTeam,
 	}
-
-	tCol, err := connectCol(uri, database, teamCollection)
+	_, err = teamCol.UpdateOne(ctx, bson.M{"_id": objId}, update)
 	if err != nil {
 		return err
 	}
-	_, err = tCol.UpdateOne(ctx, bson.M{"_id": objId}, update)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Team %s was updated with new name: %s", id, name)
+	fmt.Printf("Team %s was updated with new name: %s\n", id, name)
 	return nil
 }

@@ -2,9 +2,7 @@ package manager
 
 import (
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
 	"math"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -22,17 +20,8 @@ func GetEmployers(c *gin.Context) {
 	}
 
 	employers, total, err := dbShowAllEmployee(page, limit)
-
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{
-			"success":   false,
-			"data":      nil,
-			"total":     0,
-			"page":      0,
-			"last_page": 0,
-			"limit":     0,
-			"message":   err.Error(),
-		})
+		responseAllNotFound(c, err)
 		return
 	}
 
@@ -41,57 +30,33 @@ func GetEmployers(c *gin.Context) {
 		last = 1
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      employers,
-		"total":     total,
-		"page":      page,
-		"last_page": last,
-		"limit":     limit,
-		"message":   "Get all employers successfully",
-	})
+	responseAllEmployeeOK(c, employers, total, page, last, limit)
 	return
 }
 
 func PostEmployer(c *gin.Context) {
-	var employer *Employer
+	var employer *EmployerPost
 	var err error
 
 	if err := c.BindJSON(&employer); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"data":    employer,
-			"message": err.Error(),
-		})
+		responseBadRequest(c, employer.ID.Hex(), err)
 		return
 	}
 
-	employer.Name, employer.Gender, employer.DoB, err = validationAddEmployer(employer.Name, string(rune(employer.Gender)), employer.DoB)
+	name, gender, dob, err := validationAddEmployer(employer.Name, employer.Gender, employer.DoB)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    employer,
-			"message": err.Error(),
-		})
+		responseBadRequest(c, employer.ID.Hex(), err)
 		return
 	}
 
 	//insert the newly created object into mongodb
-	err = dbAddEmployer(employer.Name, employer.Gender, employer.DoB)
+	err = dbAddEmployer(name, gender, dob)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    employer,
-			"message": err.Error(),
-		})
+		responseInternalServer(c, employer.ID.Hex(), err)
 		return
 	}
+	responseEmployerOK(c, employer, "Add Successfully")
 
-	c.JSON(http.StatusCreated, gin.H{
-		"success": true,
-		"data":    employer,
-		"message": "Employer was created",
-	})
 	return
 
 }
@@ -99,78 +64,42 @@ func PostEmployer(c *gin.Context) {
 func DelEmployerByID(c *gin.Context) {
 	id, err := validationString(c.Param("id"))
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    id,
-			"message": err.Error()})
+		responseBadRequest(c, c.Param("id"), err)
 		return
 	}
 
 	err = dbDeleteEmployer(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    id,
-			"message": err.Error()})
+		responseInternalServer(c, id, err)
 		return
 	}
-
-	c.IndentedJSON(http.StatusNoContent, gin.H{
-		"success": true,
-		"data":    id,
-		"message": fmt.Sprintf("Hash with ID %s was deleted", id)})
-	return
+	responseOK(c, id, fmt.Sprintf("Employee with ID %s was deleted\n", id))
 }
 
 func UpdateEmployerByID(c *gin.Context) {
-	var employer *Employer
+	var employer *EmployerPost
 
 	id, err := validationString(c.Param("id"))
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    id,
-			"message": err.Error()})
+		responseBadRequest(c, c.Param("id"), err)
 		return
 	}
 
 	if err := c.BindJSON(&employer); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"data":    employer,
-			"message": err.Error(),
-		})
+		responseBadRequest(c, id, err)
 		return
 	}
 
-	employer.Name, employer.Gender, employer.DoB, err = validationAddEmployer(employer.Name, string(rune(employer.Gender)), employer.DoB)
+	name, gender, dob, err := validationAddEmployer(employer.Name, employer.Gender, employer.DoB)
+	if err := c.BindJSON(&employer); err != nil {
+		responseBadRequest(c, employer.ID.Hex(), err)
+		return
+	}
 
-	err = dbUpdateEmployer(id, employer.Name, employer.Gender, employer.DoB)
+	err = dbUpdateEmployer(id, name, gender, dob)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"data":    employer,
-			"message": err.Error(),
-		})
+		responseInternalServer(c, employer.ID.Hex(), err)
 		return
 	}
-
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    employer,
-		"message": "Update successfully",
-	})
-
-	return
-}
-
-func response(success bool, data Employer, msg string) map[string]interface{} {
-
-	res := bson.M{
-		"success": success,
-		"data":    data,
-		"message": msg,
-	}
-
-	return res
+	responseEmployerOK(c, employer, "Update successfully\n")
 }
