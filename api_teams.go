@@ -2,13 +2,14 @@ package manager
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"math"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
-func GetTeams(c *gin.Context) {
+func apiGetTeams(c *gin.Context) {
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
 		page = 1
@@ -32,7 +33,7 @@ func GetTeams(c *gin.Context) {
 	responseAllTeamOK(c, teams, total, page, last, limit)
 }
 
-func GetAllMemberInTeam(c *gin.Context) {
+func apiGetAllMemberInTeam(c *gin.Context) {
 	id, err := validationString(c.Param("id"))
 	if err != nil {
 		responseBadRequest(c, c.Param("id"), err)
@@ -52,7 +53,7 @@ func GetAllMemberInTeam(c *gin.Context) {
 	})
 }
 
-func PostTeam(c *gin.Context) {
+func apiPostTeam(c *gin.Context) {
 	var (
 		team *Teams
 		err  error
@@ -76,10 +77,10 @@ func PostTeam(c *gin.Context) {
 		return
 	}
 
-	responseTeamCreated(c, team, "Employer was created\n")
+	responseTeamCreated(c, team, "Team was created\n")
 }
 
-func DelTeamByID(c *gin.Context) {
+func apiDelTeamByID(c *gin.Context) {
 	id, err := validationString(c.Param("id"))
 	if err != nil {
 		responseBadRequest(c, c.Param("id"), err)
@@ -95,7 +96,7 @@ func DelTeamByID(c *gin.Context) {
 	responseOK(c, id, fmt.Sprintf("Team with ID %s was deleted\n", id))
 }
 
-func AddMemberToTeamByID(c *gin.Context) {
+func apiAddMemberToTeamByID(c *gin.Context) {
 	id := c.Param("id")
 	memberId := c.Param("mid")
 
@@ -109,7 +110,7 @@ func AddMemberToTeamByID(c *gin.Context) {
 	responseOK(c, id, msg)
 }
 
-func DelMemberInTeamByID(c *gin.Context) {
+func apiDelMemberInTeamByID(c *gin.Context) {
 	id := c.Param("id")
 	mid := c.Param("mid")
 	err = dbDelTeamMemberById(id, mid)
@@ -122,7 +123,7 @@ func DelMemberInTeamByID(c *gin.Context) {
 	responseOK(c, id, msg)
 }
 
-func ChangeTeamName(c *gin.Context) {
+func apiChangeTeamName(c *gin.Context) {
 	var team *Teams
 
 	id, err := validationString(c.Param("id"))
@@ -147,5 +148,5 @@ func ChangeTeamName(c *gin.Context) {
 		responseInternalServer(c, team.ID.Hex(), err)
 		return
 	}
-	responseOK(c, id, "Change name successfully\n")
+	responseOK(c, id, "Change Team name successfully\n")
 }

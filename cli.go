@@ -2,6 +2,7 @@ package manager
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -18,8 +19,6 @@ var rootCmd = &cobra.Command{
 	Short: "An Application for Employers Management",
 	Long: `This Application allows you to execute CRUD task that is connected to the DB 
 and a Server for API`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
 		if mode == "server" {
 			err := serverMode()

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetEmployers(c *gin.Context) {
+func apiGetEmployers(c *gin.Context) {
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
 		page = 1
@@ -34,9 +34,8 @@ func GetEmployers(c *gin.Context) {
 	return
 }
 
-func PostEmployer(c *gin.Context) {
+func apiPostEmployer(c *gin.Context) {
 	var employer *EmployerPost
-	var err error
 
 	if err := c.BindJSON(&employer); err != nil {
 		responseBadRequest(c, employer.ID.Hex(), err)
@@ -55,13 +54,14 @@ func PostEmployer(c *gin.Context) {
 		responseInternalServer(c, employer.ID.Hex(), err)
 		return
 	}
-	responseEmployerOK(c, employer, "Add Successfully")
 
-	return
+	msg := fmt.Sprintf("Insert employer name: %s, gender: %s, DoB: %s to DB successfully",
+		name, convertNumToGender(gender), dob)
 
+	responseEmployerOK(c, employer, msg)
 }
 
-func DelEmployerByID(c *gin.Context) {
+func apiDelEmployerByID(c *gin.Context) {
 	id, err := validationString(c.Param("id"))
 	if err != nil {
 		responseBadRequest(c, c.Param("id"), err)
@@ -76,7 +76,7 @@ func DelEmployerByID(c *gin.Context) {
 	responseOK(c, id, fmt.Sprintf("Employee with ID %s was deleted\n", id))
 }
 
-func UpdateEmployerByID(c *gin.Context) {
+func apiUpdateEmployerByID(c *gin.Context) {
 	var employer *EmployerPost
 
 	id, err := validationString(c.Param("id"))
@@ -91,15 +91,18 @@ func UpdateEmployerByID(c *gin.Context) {
 	}
 
 	name, gender, dob, err := validationAddEmployer(employer.Name, employer.Gender, employer.DoB)
-	if err := c.BindJSON(&employer); err != nil {
-		responseBadRequest(c, employer.ID.Hex(), err)
+	if err != nil {
+		responseInternalServer(c, id, err)
 		return
 	}
 
 	err = dbUpdateEmployer(id, name, gender, dob)
 	if err != nil {
-		responseInternalServer(c, employer.ID.Hex(), err)
+		responseInternalServer(c, id, err)
 		return
 	}
-	responseEmployerOK(c, employer, "Update successfully\n")
+
+	msg := fmt.Sprintf("Employer %s was updated:\nName: %s\nGender: %s\nDoB: %s\n",
+		id, name, convertNumToGender(gender), dob)
+	responseOK(c, id, msg)
 }
