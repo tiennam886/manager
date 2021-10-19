@@ -84,6 +84,21 @@ func validationObjectID(teamId string, memId string) (primitive.ObjectID, primit
 	return objId, memberId, nil
 }
 
+func validationObjID(id string) (primitive.ObjectID, error) {
+	var objId primitive.ObjectID
+
+	id, err = validationString(id)
+	if err != nil {
+		return objId, err
+	}
+
+	objId, err = primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return objId, err
+	}
+	return objId, nil
+}
+
 func validationArgs(args []string) (int, int, error) {
 	var page, limit int
 	numArgs := len(args)

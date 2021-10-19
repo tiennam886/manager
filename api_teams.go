@@ -1,9 +1,9 @@
 package manager
 
 import (
+	json2 "encoding/json"
 	"fmt"
 	"math"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -34,23 +34,28 @@ func apiGetTeams(c *gin.Context) {
 }
 
 func apiGetAllMemberInTeam(c *gin.Context) {
+	var team TeamMem
+
 	id, err := validationString(c.Param("id"))
 	if err != nil {
 		responseBadRequest(c, c.Param("id"), err)
 		return
 	}
 
-	team, err := dbShowAllMemberInTeam(id)
+	data, _ := getCache(id)
+	err = json2.Unmarshal([]byte(data), &team)
+	if data != "" && err == nil {
+		responseOK(c, team, "All member in team has showed")
+		return
+	}
+
+	team, err = dbShowAllMemberInTeam(id)
 	if err != nil {
 		responseInternalServer(c, id, err)
 		return
 	}
-
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    team,
-		"message": "All member in team has showed\n",
-	})
+	setCache(id, team)
+	responseOK(c, team, "All member in team has showed")
 }
 
 func apiPostTeam(c *gin.Context) {
@@ -77,7 +82,7 @@ func apiPostTeam(c *gin.Context) {
 		return
 	}
 
-	responseTeamCreated(c, team, "Team was created\n")
+	responseOK(c, team, "Team was created\n")
 }
 
 func apiDelTeamByID(c *gin.Context) {
@@ -92,7 +97,7 @@ func apiDelTeamByID(c *gin.Context) {
 		responseInternalServer(c, id, err)
 		return
 	}
-
+	delCache(id)
 	responseOK(c, id, fmt.Sprintf("Team with ID %s was deleted\n", id))
 }
 
@@ -105,7 +110,7 @@ func apiAddMemberToTeamByID(c *gin.Context) {
 		responseInternalServer(c, id, err)
 		return
 	}
-
+	delCache(id)
 	msg := fmt.Sprintf("Add employer with id: %s in team with id: %s successfully\n", memberId, id)
 	responseOK(c, id, msg)
 }
@@ -118,7 +123,7 @@ func apiDelMemberInTeamByID(c *gin.Context) {
 		responseInternalServer(c, id, err)
 		return
 	}
-
+	delCache(id)
 	msg := fmt.Sprintf("Delete employer with id: %s in team with id: %s successfully\n", mid, id)
 	responseOK(c, id, msg)
 }
@@ -148,5 +153,6 @@ func apiChangeTeamName(c *gin.Context) {
 		responseInternalServer(c, team.ID.Hex(), err)
 		return
 	}
+	delCache(id)
 	responseOK(c, id, "Change Team name successfully\n")
 }

@@ -103,7 +103,7 @@ func dbAddTeamMember(id string, newMemberId string) error {
 		return err
 	}
 
-	err = dbFindEmployeeID(memId)
+	_, err = mongoFindEmployeeID(memId)
 	if err != nil {
 		return err
 	}

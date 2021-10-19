@@ -25,7 +25,7 @@ For example: app addEmp "Tran Nam" 0 "2000-01-01"`,
 			return
 		}
 
-		err = dbAddEmployer(name, gender, date)
+		err = mongoAddEmployer(name, gender, date)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -44,7 +44,7 @@ app showAllEmp 1 15`,
 			fmt.Println(err.Error())
 			return
 		}
-		employers, total, err := dbShowAllEmployee(page, limit)
+		employers, total, err := mongoShowAllEmployee(page, limit)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -78,7 +78,7 @@ For example: app addEmp 6156b66f75697f7a901022f1`,
 			return
 		}
 
-		err = dbDeleteEmployer(id)
+		err = mongoDeleteEmployer(id)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -111,7 +111,7 @@ For example: app updateEmp 6156b66f75697f7a901022f1 "Tran Nam" 0 "2000-01-01"`,
 			return
 		}
 
-		err = dbUpdateEmployer(id, name, gender, date)
+		err = mongoUpdateEmployer(id, name, gender, date)
 		if err != nil {
 			fmt.Println(err.Error())
 			return

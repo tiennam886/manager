@@ -24,7 +24,7 @@ type EmployerPost struct {
 	DoB    string             `bson:"dob" json:"dob"`
 }
 
-func dbAddEmployer(name string, gender int, date string) error {
+func mongoAddEmployer(name string, gender int, date string) error {
 	ctx := initCtx()
 
 	employer := bson.M{
@@ -43,7 +43,7 @@ func dbAddEmployer(name string, gender int, date string) error {
 	return nil
 }
 
-func dbShowAllEmployee(page int, limit int) ([]Employer, int64, error) {
+func mongoShowAllEmployee(page int, limit int) ([]Employer, int64, error) {
 	ctx := initCtx()
 
 	filter := bson.M{}
@@ -71,7 +71,7 @@ func dbShowAllEmployee(page int, limit int) ([]Employer, int64, error) {
 	return employers, total, nil
 }
 
-func dbUpdateEmployer(id string, newName string, newGender int, newBoB string) error {
+func mongoUpdateEmployer(id string, newName string, newGender int, newDoB string) error {
 	ctx := initCtx()
 
 	objId, err := primitive.ObjectIDFromHex(id)
@@ -83,7 +83,7 @@ func dbUpdateEmployer(id string, newName string, newGender int, newBoB string) e
 		ID:     objId,
 		Name:   newName,
 		Gender: newGender,
-		DoB:    newBoB,
+		DoB:    newDoB,
 	}
 	update := bson.M{
 		"$set": newEmp,
@@ -95,11 +95,11 @@ func dbUpdateEmployer(id string, newName string, newGender int, newBoB string) e
 	}
 
 	fmt.Printf("Employer %s was updated:\nName: %s\nGender: %s\nDoB: %s\n",
-		id, newName, convertNumToGender(newGender), newBoB)
+		id, newName, convertNumToGender(newGender), newDoB)
 	return nil
 }
 
-func dbDeleteEmployer(id string) error {
+func mongoDeleteEmployer(id string) error {
 	var employer *Employer
 
 	ctx := initCtx()
@@ -126,14 +126,14 @@ func dbDeleteEmployer(id string) error {
 
 }
 
-func dbFindEmployeeID(id primitive.ObjectID) error {
+func mongoFindEmployeeID(id primitive.ObjectID) (Employer, error) {
 	var employer Employer
 
 	ctx := initCtx()
 
 	err := employeeCol.FindOne(ctx, bson.M{"_id": id}).Decode(&employer)
 	if err != nil {
-		return fmt.Errorf("Employers with ID %s does not exist.\n", id)
+		return employer, fmt.Errorf("Employers with ID %s does not exist.\n", id)
 	}
-	return nil
+	return employer, nil
 }

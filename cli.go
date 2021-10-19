@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	db          string
 	mode        string
 	employeeCol *mongo.Collection
 	teamCol     *mongo.Collection
@@ -37,9 +38,9 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize()
-
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.Flags().StringVar(&mode, "mode", "", "Set Server mode with --mode=server")
+	rootCmd.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
 
 	teamCol, err = connectCol(uri, database, teamCollection)
 	if err != nil {
@@ -53,6 +54,17 @@ func init() {
 		return
 	}
 
+	mySqlDB, err = connectMySql()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	cacheClient = initCache()
+	addCmd()
+}
+
+func addCmd() {
 	// cli handles employers
 	rootCmd.AddCommand(addEmpCmd)
 	rootCmd.AddCommand(showAllEmp)

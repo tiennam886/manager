@@ -1,7 +1,9 @@
 package manager
 
 import (
+	json2 "encoding/json"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"math"
 	"strconv"
 
@@ -19,7 +21,7 @@ func apiGetEmployers(c *gin.Context) {
 		limit = 10
 	}
 
-	employers, total, err := dbShowAllEmployee(page, limit)
+	employers, total, err := mongoShowAllEmployee(page, limit)
 	if err != nil {
 		responseAllNotFound(c, err)
 		return
@@ -32,6 +34,37 @@ func apiGetEmployers(c *gin.Context) {
 
 	responseAllEmployeeOK(c, employers, total, page, last, limit)
 	return
+}
+
+func apiGetEmployee(c *gin.Context) {
+	id, err := validationString(c.Param("id"))
+	if err != nil {
+		responseError(c, id, err)
+		return
+	}
+
+	var employer Employer
+	data, _ := getCache(id)
+	err = json2.Unmarshal([]byte(data), &employer)
+	if data != "" && err == nil {
+		responseOK(c, employer, "Get Employer successfully")
+		return
+	}
+
+	objId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		responseError(c, objId, err)
+		return
+	}
+
+	employer, err = mongoFindEmployeeID(objId)
+	if err != nil {
+		responseError(c, id, err)
+		return
+	}
+
+	setCache(id, employer)
+	responseOK(c, employer, "Get Employer successfully")
 }
 
 func apiPostEmployer(c *gin.Context) {
@@ -49,7 +82,7 @@ func apiPostEmployer(c *gin.Context) {
 	}
 
 	//insert the newly created object into mongodb
-	err = dbAddEmployer(name, gender, dob)
+	err = mongoAddEmployer(name, gender, dob)
 	if err != nil {
 		responseInternalServer(c, "", err)
 		return
@@ -57,8 +90,7 @@ func apiPostEmployer(c *gin.Context) {
 
 	msg := fmt.Sprintf("Insert employer name: %s, gender: %s, DoB: %s to DB successfully",
 		name, convertNumToGender(gender), dob)
-
-	responseEmployerOK(c, employer, msg)
+	responseOK(c, employer, msg)
 }
 
 func apiDelEmployerByID(c *gin.Context) {
@@ -68,11 +100,12 @@ func apiDelEmployerByID(c *gin.Context) {
 		return
 	}
 
-	err = dbDeleteEmployer(id)
+	err = mongoDeleteEmployer(id)
 	if err != nil {
 		responseInternalServer(c, id, err)
 		return
 	}
+	delCache(id)
 	responseOK(c, id, fmt.Sprintf("Employee with ID %s was deleted\n", id))
 }
 
@@ -92,16 +125,16 @@ func apiUpdateEmployerByID(c *gin.Context) {
 
 	name, gender, dob, err := validationAddEmployer(employer.Name, employer.Gender, employer.DoB)
 	if err != nil {
-		responseInternalServer(c, id, err)
+		responseError(c, id, err)
 		return
 	}
 
-	err = dbUpdateEmployer(id, name, gender, dob)
+	err = mongoUpdateEmployer(id, name, gender, dob)
 	if err != nil {
-		responseInternalServer(c, id, err)
+		responseError(c, id, err)
 		return
 	}
-
+	delCache(id)
 	msg := fmt.Sprintf("Employer %s was updated:\nName: %s\nGender: %s\nDoB: %s\n",
 		id, name, convertNumToGender(gender), dob)
 	responseOK(c, id, msg)
