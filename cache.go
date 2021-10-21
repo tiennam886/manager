@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -9,12 +8,11 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var (
-	cacheAddr   = fmt.Sprintf("%s:%s", conf.ServerHost, conf.CachePort)
-	cacheClient *redis.Client
-)
+var cacheClient *redis.Client
 
 func initCache() *redis.Client {
+	cacheAddr := fmt.Sprintf("%s:%s", conf.ServerHost, conf.CachePort)
+
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cacheAddr,
 		Password: "", // no password set
@@ -24,11 +22,8 @@ func initCache() *redis.Client {
 }
 
 func getCache(key string) (string, error) {
-	ctx := context.Background()
+	ctx := initCtx()
 	val, err := cacheClient.Get(ctx, key).Result()
-	if err != nil {
-		return "", err
-	}
 
 	return val, err
 }
@@ -39,7 +34,7 @@ func setCache(key string, data interface{}) {
 		fmt.Println(err.Error())
 	}
 
-	ctx := context.Background()
+	ctx := initCtx()
 	err = cacheClient.Set(ctx, key, json, 10*time.Minute).Err()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -47,7 +42,7 @@ func setCache(key string, data interface{}) {
 }
 
 func delCache(key string) {
-	ctx := context.Background()
+	ctx := initCtx()
 	err := cacheClient.Del(ctx, key).Err()
 	if err != nil {
 		fmt.Println(err)

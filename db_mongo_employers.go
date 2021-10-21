@@ -8,7 +8,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var employerCollection = "employers"
 var (
 	employer  MongoEmployer
 	employers []MongoEmployerPost

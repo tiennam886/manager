@@ -27,12 +27,12 @@ type TomlConfig struct {
 var conf TomlConfig
 
 func loadConfig() (TomlConfig, error) {
-	in, err := os.Open("config.toml")
+	in, err := os.Open("/home/namtt/go/src/manager/config.toml")
 	if err != nil {
 		return conf, err
 	}
 
 	_, err = toml.DecodeReader(in, &conf)
-	fmt.Println("Load Config success")
+	fmt.Println(conf.MySqlHost)
 	return conf, err
 }

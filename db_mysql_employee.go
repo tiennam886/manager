@@ -9,16 +9,14 @@ type MySqlEmployee struct {
 	DoB    string `json:"dob"`
 }
 
-var employeeTable = conf.MySqlEmployee
-
 func dbMySqlAddEmployee(name string, gender int, dob string) error {
-	qr := fmt.Sprintf("INSERT INTO %s(name, gender, dob) VALUES (?, ?, ?);", employeeTable)
+	qr := fmt.Sprintf("INSERT INTO %s(name, gender, dob) VALUES (?, ?, ?);", conf.MySqlEmployee)
 	_, err := mySqlDB.Query(qr, name, gender, dob)
 	return err
 }
 
 func dbMySqlShowAllEmployees(offset int, limit int) (interface{}, int, error) {
-	qr := fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ? ;", employeeTable)
+	qr := fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ? ;", conf.MySqlEmployee)
 	all, err := mySqlDB.Query(qr, limit, offset)
 	if err != nil {
 		return nil, 0, err
@@ -39,7 +37,7 @@ func dbMySqlShowAllEmployees(offset int, limit int) (interface{}, int, error) {
 }
 
 func dbMySqlGetEmployeeByID(id int) (interface{}, error) {
-	qr := fmt.Sprintf("SELECT * FROM %s WHERE id=?", employeeTable)
+	qr := fmt.Sprintf("SELECT * FROM %s WHERE id=?", conf.MySqlEmployee)
 	res := mySqlDB.QueryRow(qr, id)
 
 	var gender int
@@ -59,7 +57,7 @@ func dbMySqlUpdateEmployee(id int, name string, gender int, dob string) error {
 		return err
 	}
 
-	qr := fmt.Sprintf("UPDATE %s SET name=?, gender=?, dob=? WHERE id=?", employeeTable)
+	qr := fmt.Sprintf("UPDATE %s SET name=?, gender=?, dob=? WHERE id=?", conf.MySqlEmployee)
 	_, err = mySqlDB.Query(qr, name, gender, dob, id)
 	return err
 }
@@ -75,7 +73,7 @@ func dbMySqlDelEmployeeByID(id int) error {
 		return err
 	}
 
-	qr := fmt.Sprintf("DELETE FROM %s WHERE id=?", employeeTable)
+	qr := fmt.Sprintf("DELETE FROM %s WHERE id=?", conf.MySqlEmployee)
 	_, err = mySqlDB.Query(qr, id)
 	return err
 }

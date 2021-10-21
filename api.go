@@ -7,11 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	serverHost = conf.ServerHost
-	serverPort = conf.ServerPort
-)
-
 func serverMode() error {
 	router := gin.Default()
 
@@ -32,13 +27,9 @@ func serverMode() error {
 	router.PATCH("/team/:id", apiChangeTeamName)
 
 	var addr string
-	addr = fmt.Sprintf("%s:%s", serverHost, serverPort)
+	addr = fmt.Sprintf("%s:%s", conf.MySqlHost, conf.MySqlPort)
 	err := router.Run(addr)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func responseAllNotFound(c *gin.Context, err error) {

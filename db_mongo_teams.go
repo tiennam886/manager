@@ -8,8 +8,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var teamCollection = "teams"
-
 type Teams struct {
 	ID     primitive.ObjectID   `bson:"_id" json:"id"`
 	Team   string               `bson:"team" json:"team"`

@@ -2,11 +2,6 @@ package manager
 
 import "fmt"
 
-var (
-	teamTable    = conf.MySqlTeams
-	teamMemTable = conf.MySqlTeamMem
-)
-
 type MySqlTeam struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
@@ -19,13 +14,13 @@ type MySqlTeamMem struct {
 }
 
 func dbMySqlAddTeam(name string) error {
-	qr := fmt.Sprintf("INSERT INTO %s(name) VALUES (?);", teamTable)
+	qr := fmt.Sprintf("INSERT INTO %s(name) VALUES (?);", conf.MySqlTeams)
 	_, err := mySqlDB.Query(qr, name)
 	return err
 }
 
 func dbMySqlShowAllTeams(offset int, limit int) (interface{}, int, error) {
-	qr := fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ? ;", teamTable)
+	qr := fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ? ;", conf.MySqlTeams)
 	all, err := mySqlDB.Query(qr, limit, offset)
 	if err != nil {
 		return nil, 0, err
@@ -44,7 +39,7 @@ func dbMySqlShowAllTeams(offset int, limit int) (interface{}, int, error) {
 }
 
 func dbMySqlGetTeam(id int) (interface{}, error) {
-	qr := fmt.Sprintf("SELECT * FROM %s WHERE id=?", teamTable)
+	qr := fmt.Sprintf("SELECT * FROM %s WHERE id=?", conf.MySqlTeams)
 	res := mySqlDB.QueryRow(qr, id)
 
 	var team MySqlTeam
@@ -72,7 +67,7 @@ func dbMySqlUpdateTeam(id int, name string) error {
 		return err
 	}
 
-	qr := fmt.Sprintf("UPDATE %s SET name=? WHERE id=?", teamTable)
+	qr := fmt.Sprintf("UPDATE %s SET name=? WHERE id=?", conf.MySqlTeams)
 	_, err = mySqlDB.Query(qr, name, id)
 	return err
 }
@@ -88,31 +83,31 @@ func dbMySqlDelTeamByID(id int) error {
 		return err
 	}
 
-	qr := fmt.Sprintf("DELETE FROM %s WHERE id=?", teamTable)
+	qr := fmt.Sprintf("DELETE FROM %s WHERE id=?", conf.MySqlTeams)
 	_, err = mySqlDB.Query(qr, id)
 	return err
 }
 
 func dbMySqlAddTeamMember(teamId int, memId int) error {
-	qr := fmt.Sprintf("INSERT INTO %s(teamId, memId) VALUES(?, ?)", teamMemTable)
+	qr := fmt.Sprintf("INSERT INTO %s(teamId, memId) VALUES(?, ?)", conf.MySqlTeamMem)
 	_, err := mySqlDB.Query(qr, teamId, memId)
 	return err
 }
 
 func dbMySqlDelTeamMember(teamId int, memId int) error {
-	qr := fmt.Sprintf("DELETE FROM %s WHERE teamId=? AND memId=?", teamMemTable)
+	qr := fmt.Sprintf("DELETE FROM %s WHERE teamId=? AND memId=?", conf.MySqlTeamMem)
 	_, err = mySqlDB.Query(qr, teamId, memId)
 	return err
 }
 
 func dbMySqlDelTeamMemByTeamID(teamId int) error {
-	qr := fmt.Sprintf("DELETE FROM %s WHERE teamId=?", teamMemTable)
+	qr := fmt.Sprintf("DELETE FROM %s WHERE teamId=?", conf.MySqlTeamMem)
 	_, err = mySqlDB.Query(qr, teamId)
 	return err
 }
 
 func dbMySqlDelTeamMemByMemID(memId int) error {
-	qr := fmt.Sprintf("DELETE FROM %s WHERE memId=?", teamMemTable)
+	qr := fmt.Sprintf("DELETE FROM %s WHERE memId=?", conf.MySqlTeamMem)
 	_, err = mySqlDB.Query(qr, memId)
 	return err
 }
@@ -120,7 +115,7 @@ func dbMySqlDelTeamMemByMemID(memId int) error {
 func dbMySqlShowTeamMember(teamId int) (interface{}, error) {
 	var employees []MySqlEmployee
 
-	qr := fmt.Sprintf("SELECT * FROM %s WHERE teamId=?", teamMemTable)
+	qr := fmt.Sprintf("SELECT * FROM %s WHERE teamId=?", conf.MySqlTeamMem)
 	all, err := mySqlDB.Query(qr, teamId)
 	if err != nil {
 		return employees, err

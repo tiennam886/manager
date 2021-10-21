@@ -16,14 +16,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var (
-	uri         = fmt.Sprintf("mongodb://%s:%s", conf.ServerHost, conf.MongoPort)
-	database    = conf.MongoDatabase
-	mySqlSource = fmt.Sprintf("%s@tcp(%s:%s)/%s", conf.MySqlUser, conf.MySqlHost, conf.MySqlPort, conf.MySqlDatabase)
-	mySqlDB     *sql.DB
-)
+var mySqlDB *sql.DB
 
-func connectCol(uri string, database string, col string) (*mongo.Collection, error) {
+func connectCol(col string) (*mongo.Collection, error) {
+	uri := fmt.Sprintf("mongodb://%s:%s", conf.ServerHost, conf.MongoPort)
+
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
@@ -40,7 +37,7 @@ func connectCol(uri string, database string, col string) (*mongo.Collection, err
 		return nil, err
 	}
 
-	return client.Database(database).Collection(col), nil
+	return client.Database(conf.MongoDatabase).Collection(col), nil
 }
 
 func initCtx() context.Context {
@@ -49,6 +46,7 @@ func initCtx() context.Context {
 }
 
 func connectMySql() (*sql.DB, error) {
+	mySqlSource := fmt.Sprintf("%s@tcp(%s:%s)/%s", conf.MySqlUser, conf.MySqlHost, conf.MySqlPort, conf.MySqlDatabase)
 	mySqlDB, err = sql.Open("mysql", mySqlSource)
 	return mySqlDB, err
 }
