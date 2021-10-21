@@ -7,8 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var serverHost = "localhost"
-var serverPort = "8080"
+var (
+	serverHost = conf.ServerHost
+	serverPort = conf.ServerPort
+)
 
 func serverMode() error {
 	router := gin.Default()
