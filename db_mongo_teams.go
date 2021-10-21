@@ -19,26 +19,21 @@ type Teams struct {
 type TeamMem struct {
 	ID     primitive.ObjectID `bson:"_id" json:"id"`
 	Team   string             `bson:"team" json:"team"`
-	Member []Employer         `bson:"employers" json:"employers"`
+	Member []MongoEmployer    `bson:"employers" json:"employers"`
 }
 
-func dbAddTeam(name string) error {
+func mongoAddTeam(name string) error {
 	ctx := initCtx()
 
 	team := bson.M{
 		"team":   name,
 		"member": []string{},
 	}
-	resp, err := teamCol.InsertOne(ctx, team)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Insert team with name %s to DB successfully with ID: %s\n", name, resp.InsertedID)
-	return nil
+	_, err := teamCol.InsertOne(ctx, team)
+	return err
 }
 
-func dbGetAllTeams(page int, limit int) ([]Teams, int64, error) {
+func mongoGetAllTeams(page int, limit int) (interface{}, int, error) {
 	ctx := initCtx()
 
 	filter := bson.M{}
@@ -63,10 +58,10 @@ func dbGetAllTeams(page int, limit int) ([]Teams, int64, error) {
 		return nil, 0, err
 	}
 
-	return teams, total, nil
+	return teams, int(total), nil
 }
 
-func dbShowAllMemberInTeam(id string) (TeamMem, error) {
+func mongoShowAllMemberInTeam(id string) (interface{}, error) {
 	var resp []TeamMem
 
 	ctx := initCtx()
@@ -97,7 +92,7 @@ func dbShowAllMemberInTeam(id string) (TeamMem, error) {
 	return resp[0], nil
 }
 
-func dbAddTeamMember(id string, newMemberId string) error {
+func mongoAddTeamMember(id string, newMemberId string) error {
 	objId, memId, err := validationObjectID(id, newMemberId)
 	if err != nil {
 		return err
@@ -108,41 +103,41 @@ func dbAddTeamMember(id string, newMemberId string) error {
 		return err
 	}
 
-	team, err := dbFindTeamID(objId)
+	team, err := mongoFindTeamID(objId)
 	if err != nil {
 		return err
 	}
-
-	for _, id := range team.Member {
+	teamTransforms := team.(Teams)
+	for _, id := range teamTransforms.Member {
 		if memId == id {
-			return fmt.Errorf("Member with id: %s has already been in %s\n", memId, team.Team)
+			return fmt.Errorf("Member with id: %s has already been in %s\n", memId, teamTransforms.Team)
 		}
 	}
 
-	err = dbUpdateTeamMember(objId, memId, "$push")
+	err = mongoUpdateTeamMember(objId, memId, "$push")
 	if err != nil {
 		return err
 	}
-	fmt.Printf("User with id: %s was added to Team with id: %s \n", newMemberId, id)
+	fmt.Printf("User with id: %s was added to MySqlTeam with id: %s \n", newMemberId, id)
 	return nil
 }
 
-func dbDelTeamMemberById(id string, delMemberId string) error {
+func mongoDelTeamMemberById(id string, delMemberId string) error {
 	objId, memId, err := validationObjectID(id, delMemberId)
 	if err != nil {
 		return err
 	}
 
-	err = dbUpdateTeamMember(objId, memId, "$pull")
+	err = mongoUpdateTeamMember(objId, memId, "$pull")
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("User with id: %s was deleted from Team with id: %s \n", delMemberId, id)
+	fmt.Printf("User with id: %s was deleted from MySqlTeam with id: %s \n", delMemberId, id)
 	return nil
 }
 
-func dbUpdateTeamMember(objId primitive.ObjectID, memId primitive.ObjectID, method string) error {
+func mongoUpdateTeamMember(objId primitive.ObjectID, memId primitive.ObjectID, method string) error {
 	ctx := initCtx()
 
 	filter := bson.M{"_id": objId}
@@ -157,32 +152,27 @@ func dbUpdateTeamMember(objId primitive.ObjectID, memId primitive.ObjectID, meth
 	return nil
 }
 
-func dbFindTeamID(objId primitive.ObjectID) (Teams, error) {
+func mongoFindTeamID(objId primitive.ObjectID) (interface{}, error) {
 	var team Teams
 
 	ctx := initCtx()
 
 	err = teamCol.FindOne(ctx, bson.M{"_id": objId}).Decode(&team)
 	if err != nil {
-		return team, fmt.Errorf("Team with id:  %s was not found\n", objId)
+		return team, fmt.Errorf("MySqlTeam with id:  %s was not found\n", objId)
 	}
 	return team, nil
 }
 
-func dbDeleteTeamById(id string) error {
+func mongoDeleteTeamById(id string) error {
 	ctx := initCtx()
-
-	id, err = validationString(id)
-	if err != nil {
-		return err
-	}
 
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("TEAM_ID %s was invalid\n", id)
 	}
 
-	_, err = dbFindTeamID(objId)
+	_, err = mongoFindTeamID(objId)
 	if err != nil {
 		return err
 	}
@@ -192,18 +182,14 @@ func dbDeleteTeamById(id string) error {
 		return err
 	}
 
-	fmt.Printf("Team %s was deleted\n", id)
+	fmt.Printf("MySqlTeam %s was deleted\n", id)
 	return nil
 
 }
 
-func dbUpdateTeam(id string, name string) error {
+func mongoUpdateTeam(id string, name string) error {
 	ctx := initCtx()
 
-	id, err := validationString(id)
-	if err != nil {
-		return err
-	}
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("Employer_ID %s was invalid\n", id)
@@ -214,15 +200,15 @@ func dbUpdateTeam(id string, name string) error {
 		return err
 	}
 
-	team, err := dbFindTeamID(objId)
+	team, err := mongoFindTeamID(objId)
 	if err != nil {
 		return err
 	}
-
+	teamTransforms := team.(Teams)
 	newTeam := Teams{
 		ID:     objId,
 		Team:   name,
-		Member: team.Member,
+		Member: teamTransforms.Member,
 	}
 	update := bson.M{
 		"$set": newTeam,
@@ -231,6 +217,6 @@ func dbUpdateTeam(id string, name string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Team %s was updated with new name: %s\n", id, name)
+	fmt.Printf("MySqlTeam %s was updated with new name: %s\n", id, name)
 	return nil
 }

@@ -9,15 +9,19 @@ import (
 )
 
 var employerCollection = "employers"
+var (
+	employer  MongoEmployer
+	employers []MongoEmployerPost
+)
 
-type Employer struct {
+type MongoEmployer struct {
 	ID     primitive.ObjectID `bson:"_id" json:"id"`
 	Name   string             `bson:"name" json:"name"`
 	Gender int                `bson:"gender" json:"gender"`
 	DoB    string             `bson:"dob" json:"dob"`
 }
 
-type EmployerPost struct {
+type MongoEmployerPost struct {
 	ID     primitive.ObjectID `bson:"_id" json:"id"`
 	Name   string             `bson:"name" json:"name"`
 	Gender string             `bson:"gender" json:"gender"`
@@ -32,18 +36,11 @@ func mongoAddEmployer(name string, gender int, date string) error {
 		"gender": gender,
 		"dob":    date,
 	}
-
-	resp, err := employeeCol.InsertOne(ctx, employer)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Insert employer name: %s, gender: %s, DoB: %s to DB successfully with ID: %s\n",
-		name, convertNumToGender(gender), date, resp.InsertedID)
-	return nil
+	_, err := employeeCol.InsertOne(ctx, employer)
+	return err
 }
 
-func mongoShowAllEmployee(page int, limit int) ([]Employer, int64, error) {
+func mongoShowAllEmployee(page int, limit int) (interface{}, int, error) {
 	ctx := initCtx()
 
 	filter := bson.M{}
@@ -52,23 +49,26 @@ func mongoShowAllEmployee(page int, limit int) ([]Employer, int64, error) {
 	findOptions.SetSkip((int64(page) - 1) * int64(limit))
 	findOptions.SetLimit(int64(limit))
 
-	total, err := employeeCol.CountDocuments(ctx, filter)
-	if err != nil {
-		return nil, 0, err
-	}
-
 	cursor, err := employeeCol.Find(ctx, filter, findOptions)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	var employers []Employer
-	err = cursor.All(ctx, &employers)
-	if err != nil {
-		return nil, 0, err
+	for cursor.Next(ctx) {
+		err = cursor.Decode(&employer)
+		if err != nil {
+			return employers, 0, nil
+		}
+		e := MongoEmployerPost{
+			ID:     employer.ID,
+			Name:   employer.Name,
+			Gender: convertNumToGender(employer.Gender),
+			DoB:    employer.DoB,
+		}
+		employers = append(employers, e)
 	}
 
-	return employers, total, nil
+	return employers, len(employers), nil
 }
 
 func mongoUpdateEmployer(id string, newName string, newGender int, newDoB string) error {
@@ -79,7 +79,7 @@ func mongoUpdateEmployer(id string, newName string, newGender int, newDoB string
 		return fmt.Errorf("Employer_ID %s was invalid\n", id)
 	}
 
-	newEmp := Employer{
+	newEmp := MongoEmployer{
 		ID:     objId,
 		Name:   newName,
 		Gender: newGender,
@@ -94,14 +94,12 @@ func mongoUpdateEmployer(id string, newName string, newGender int, newDoB string
 		return err
 	}
 
-	fmt.Printf("Employer %s was updated:\nName: %s\nGender: %s\nDoB: %s\n",
+	fmt.Printf("MongoEmployer %s was updated:\nName: %s\nGender: %s\nDoB: %s\n",
 		id, newName, convertNumToGender(newGender), newDoB)
 	return nil
 }
 
 func mongoDeleteEmployer(id string) error {
-	var employer *Employer
-
 	ctx := initCtx()
 
 	objId, err := primitive.ObjectIDFromHex(id)
@@ -111,29 +109,28 @@ func mongoDeleteEmployer(id string) error {
 
 	filter := bson.M{"_id": objId}
 
-	err = employeeCol.FindOne(ctx, filter).Decode(&employer)
-	if err != nil {
-		return fmt.Errorf("Employer_ID %s does not exist\n", id)
-	}
-
-	_, err = employeeCol.DeleteOne(ctx, filter)
+	_, err = mongoFindEmployeeID(objId)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Employer %s was deleted\n", id)
-	return nil
-
+	_, err = employeeCol.DeleteOne(ctx, filter)
+	return err
 }
 
-func mongoFindEmployeeID(id primitive.ObjectID) (Employer, error) {
-	var employer Employer
-
+func mongoFindEmployeeID(id primitive.ObjectID) (interface{}, error) {
 	ctx := initCtx()
 
+	var employerPost MongoEmployerPost
 	err := employeeCol.FindOne(ctx, bson.M{"_id": id}).Decode(&employer)
 	if err != nil {
-		return employer, fmt.Errorf("Employers with ID %s does not exist.\n", id)
+		return employerPost, fmt.Errorf("Employers with ID %s does not exist.\n", id)
 	}
-	return employer, nil
+	employerPost = MongoEmployerPost{
+		ID:     employer.ID,
+		Name:   employer.Name,
+		Gender: convertNumToGender(employer.Gender),
+		DoB:    employer.DoB,
+	}
+	return employerPost, nil
 }

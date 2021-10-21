@@ -3,6 +3,7 @@ module manager
 go 1.17
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-sql-driver/mysql v1.6.0

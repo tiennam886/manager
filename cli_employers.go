@@ -8,8 +8,8 @@ import (
 
 var addEmpCmd = &cobra.Command{
 	Use:   "addEmp",
-	Short: "Adding an Employer with his/her name, gender and DoB",
-	Long: `Adding an Employer with his/her name, gender and DoB with structure: 
+	Short: "Adding an MongoEmployer with his/her name, gender and DoB",
+	Long: `Adding an MongoEmployer with his/her name, gender and DoB with structure: 
 app addEmp NAME GENDER DOB
 with GENDER: 0 for male and 1 for female, DOB in format yyyy-MM-DD
 For example: app addEmp "Tran Nam" 0 "2000-01-01"`,
@@ -19,17 +19,13 @@ For example: app addEmp "Tran Nam" 0 "2000-01-01"`,
 			return
 		}
 
-		name, gender, date, err := validationAddEmployer(args[0], args[1], args[2])
+		err := dbAddEmployer(args[0], args[1], args[2])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
 
-		err = mongoAddEmployer(name, gender, date)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
+		fmt.Printf("Insert employer name: %s, gender: %s, DoB: %s successfully\n", args[0], args[1], args[2])
 	},
 }
 
@@ -44,52 +40,48 @@ app showAllEmp 1 15`,
 			fmt.Println(err.Error())
 			return
 		}
-		employers, total, err := mongoShowAllEmployee(page, limit)
+		employers, total, err := dbShowAllEmp(page, limit)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
+		fmt.Println(total, employers)
 
-		fmt.Printf("\nList of all Employers in page: %v, limt: %v, total: %v\n", page, limit, total)
-		fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
-		for i := range employers {
-			fmt.Printf("%s\t%s\t%v\t%s\n",
-				employers[i].ID.Hex(), employers[i].Name, convertNumToGender(employers[i].Gender), employers[i].DoB)
-		}
-		fmt.Println("\nAll Employers were showed")
+		//fmt.Printf("\nList of all Employers in page: %v, limt: %v, total: %v\n", page, limit, total)
+		//fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
+		//for i := range employers {
+		//	fmt.Printf("%s\t%s\t%v\t%s\n",
+		//		employers[i].ID.Hex(), employers[i].Name, employers[i].Gender, employers[i].DoB)
+		//}
+		//fmt.Println("\nAll Employers were showed")
 	},
 }
 
 var delEmpCmd = &cobra.Command{
 	Use:   "delEmp",
-	Short: "Deleting an Employer by ID",
-	Long: `Deleting an Employer by ID with structure: 
+	Short: "Deleting an MongoEmployer by ID",
+	Long: `Deleting an MongoEmployer by ID with structure: 
 app delEmp ID 
-For example: app addEmp 6156b66f75697f7a901022f1`,
+For example: app delEmp 6156b66f75697f7a901022f1`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Println("Please delete by ID ")
 			return
 		}
 
-		id, err := validationString(args[0])
+		err = dbDelEmployee(args[0])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-
-		err = mongoDeleteEmployer(id)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
+		fmt.Printf("Employee with id: %s was deleted\n", args[0])
 	},
 }
 
 var updateEmpCmd = &cobra.Command{
 	Use:   "updateEmp",
-	Short: "Updating an Employer by ID with his/her new name, gender and DoB",
-	Long: `Adding an Employer with his/her name, gender and DoB with structure: 
+	Short: "Updating an MongoEmployer by ID with his/her new name, gender and DoB",
+	Long: `Adding an MongoEmployer with his/her name, gender and DoB with structure: 
 app updateEmp ID NAME GENDER DOB
 with GENDER: 0 for male and 1 for female, DOB in format yyyy-MM-DD
 For example: app updateEmp 6156b66f75697f7a901022f1 "Tran Nam" 0 "2000-01-01"`,
@@ -99,22 +91,11 @@ For example: app updateEmp 6156b66f75697f7a901022f1 "Tran Nam" 0 "2000-01-01"`,
 			return
 		}
 
-		id, err := validationString(args[0])
+		err = dbUpdateEmployee(args[0], args[1], args[2], args[3])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-
-		name, gender, date, err := validationAddEmployer(args[1], args[2], args[3])
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		err = mongoUpdateEmployer(id, name, gender, date)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
+		fmt.Printf("MongoEmployer %s was updated:\nName: %s\nGender: %s\nDoB: %s\n", args[0], args[1], args[2], args[3])
 	},
 }

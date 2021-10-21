@@ -2,60 +2,83 @@ package manager
 
 import "fmt"
 
-type Team struct {
-	ID   int
-	Name string
+var (
+	teamTable    = conf.MySqlTeams
+	teamMemTable = conf.MySqlTeamMem
+)
+
+type MySqlTeam struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type MySqlTeamMem struct {
+	ID      int             `json:"id"`
+	Name    string          `json:"name"`
+	Members []MySqlEmployee `json:"members"`
 }
 
 func dbMySqlAddTeam(name string) error {
-	qr := fmt.Sprintf("INSERT INTO %s(name) VALUES (?);", "teams")
+	qr := fmt.Sprintf("INSERT INTO %s(name) VALUES (?);", teamTable)
 	_, err := mySqlDB.Query(qr, name)
 	return err
 }
 
-func dbMySqlShowAllTeams(offset int, limit int) (interface{}, error) {
-	qr := fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ? ;", "teams")
+func dbMySqlShowAllTeams(offset int, limit int) (interface{}, int, error) {
+	qr := fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ? ;", teamTable)
 	all, err := mySqlDB.Query(qr, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	var teams []Team
+	var teams []MySqlTeam
 	for all.Next() {
-		var team Team
+		var team MySqlTeam
 		err = all.Scan(&team.ID, &team.Name)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		teams = append(teams, team)
 	}
-	return teams, nil
+	return teams, len(teams), nil
 }
 
-func dbMySqlFindTeamByID(id int) (interface{}, error) {
-	qr := fmt.Sprintf("SELECT * FROM %s WHERE id=?", "teams")
+func dbMySqlGetTeam(id int) (interface{}, error) {
+	qr := fmt.Sprintf("SELECT * FROM %s WHERE id=?", teamTable)
 	res := mySqlDB.QueryRow(qr, id)
-	var team Team
+
+	var team MySqlTeam
 	err := res.Scan(&team.ID, &team.Name)
 	if err != nil {
 		return nil, err
 	}
-	return team, nil
+
+	members, err := dbMySqlShowTeamMember(id)
+	if err != nil {
+		return nil, err
+	}
+
+	data := MySqlTeamMem{
+		ID:      team.ID,
+		Name:    team.Name,
+		Members: members.([]MySqlEmployee),
+	}
+	return data, nil
 }
 
 func dbMySqlUpdateTeam(id int, name string) error {
-	_, err = dbMySqlFindTeamByID(id)
+	_, err = dbMySqlGetTeam(id)
 	if err != nil {
 		return err
 	}
 
-	qr := fmt.Sprintf("UPDATE %s SET name=? WHERE id=?", "teams")
+	qr := fmt.Sprintf("UPDATE %s SET name=? WHERE id=?", teamTable)
 	_, err = mySqlDB.Query(qr, name, id)
 	return err
 }
 
 func dbMySqlDelTeamByID(id int) error {
-	_, err = dbMySqlFindTeamByID(id)
+	_, err = dbMySqlGetTeam(id)
 	if err != nil {
 		return err
 	}
@@ -65,52 +88,55 @@ func dbMySqlDelTeamByID(id int) error {
 		return err
 	}
 
-	qr := fmt.Sprintf("DELETE FROM %s WHERE id=?", "teams")
+	qr := fmt.Sprintf("DELETE FROM %s WHERE id=?", teamTable)
 	_, err = mySqlDB.Query(qr, id)
 	return err
 }
 
 func dbMySqlAddTeamMember(teamId int, memId int) error {
-	qr := fmt.Sprintf("INSERT INTO %s(teamId, memId) VALUES(?, ?)", "teamMembers")
+	qr := fmt.Sprintf("INSERT INTO %s(teamId, memId) VALUES(?, ?)", teamMemTable)
 	_, err := mySqlDB.Query(qr, teamId, memId)
 	return err
 }
 
 func dbMySqlDelTeamMember(teamId int, memId int) error {
-	qr := fmt.Sprintf("DELETE FROM %s WHERE teamId=? AND memId=?", "teamMembers")
+	qr := fmt.Sprintf("DELETE FROM %s WHERE teamId=? AND memId=?", teamMemTable)
 	_, err = mySqlDB.Query(qr, teamId, memId)
 	return err
 }
 
 func dbMySqlDelTeamMemByTeamID(teamId int) error {
-	qr := fmt.Sprintf("DELETE FROM %s WHERE teamId=?", "teamMembers")
+	qr := fmt.Sprintf("DELETE FROM %s WHERE teamId=?", teamMemTable)
 	_, err = mySqlDB.Query(qr, teamId)
 	return err
 }
 
 func dbMySqlDelTeamMemByMemID(memId int) error {
-	qr := fmt.Sprintf("DELETE FROM %s WHERE memId=?", "teamMembers")
+	qr := fmt.Sprintf("DELETE FROM %s WHERE memId=?", teamMemTable)
 	_, err = mySqlDB.Query(qr, memId)
 	return err
 }
 
 func dbMySqlShowTeamMember(teamId int) (interface{}, error) {
-	qr := fmt.Sprintf("SELECT * FROM %s WHERE teamId=?", "teamMembers")
+	var employees []MySqlEmployee
+
+	qr := fmt.Sprintf("SELECT * FROM %s WHERE teamId=?", teamMemTable)
 	all, err := mySqlDB.Query(qr, teamId)
-	var employees []interface{}
+	if err != nil {
+		return employees, err
+	}
 
 	for all.Next() {
 		var id, teamId, memId int
 		err = all.Scan(&id, &teamId, &memId)
 		if err != nil {
-			return nil, err
+			return employees, err
 		}
 		employee, err := dbMySqlGetEmployeeByID(memId)
 		if err != nil {
-			return nil, err
+			return employees, err
 		}
-		employees = append(employees, employee)
+		employees = append(employees, employee.(MySqlEmployee))
 	}
 	return employees, nil
-
 }

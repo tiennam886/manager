@@ -8,10 +8,10 @@ import (
 
 var addTeam = &cobra.Command{
 	Use:   "addTeam",
-	Short: "Adding a Team with its name",
-	Long: `Adding a Team with its name with cli structure:
+	Short: "Adding a MySqlTeam with its name",
+	Long: `Adding a MySqlTeam with its name with cli structure:
 app addTeam NAME
-For example: app addTeam "Team A"
+For example: app addTeam "MySqlTeam A"
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
@@ -19,17 +19,12 @@ For example: app addTeam "Team A"
 			return
 		}
 
-		name, err := validationString(args[0])
+		err = dbAddTeam(args[0])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-
-		err = dbAddTeam(name)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
+		fmt.Printf("Add team with name: %s successfully", args[0])
 	},
 }
 
@@ -44,25 +39,25 @@ var showAllTeam = &cobra.Command{
 			return
 		}
 
-		teams, total, err1 := dbGetAllTeams(page, limit)
+		teams, total, err1 := dbGetAllTeam(page, limit)
 		if err1 != nil {
 			fmt.Println(err.Error())
 			return
 		}
-
-		fmt.Printf("\nList of all Employers in page: %v, limt: %v, total: %v\n", page, limit, total)
-		fmt.Printf("ID\t\t\t\tNAME\t\n")
-		for i := range teams {
-			fmt.Printf("%s\t%s\n", teams[i].ID.Hex(), teams[i].Team)
-		}
+		fmt.Println(teams, total)
+		//fmt.Printf("\nList of all Employers in page: %v, limt: %v, total: %v\n", page, limit, total)
+		//fmt.Printf("ID\t\t\t\tNAME\t\n")
+		//for i := range teams {
+		//	fmt.Printf("%s\t%s\n", teams[i].ID.Hex(), teams[i].MySqlTeam)
+		//}
 		fmt.Println("\nAll Employers were showed")
 	},
 }
 
 var delTeamCmd = &cobra.Command{
 	Use:   "delTeam",
-	Short: "Deleting a Team by ID",
-	Long: `Deleting a Team by ID with structure: 
+	Short: "Deleting a MySqlTeam by ID",
+	Long: `Deleting a MySqlTeam by ID with structure: 
 app delTeam ID 
 For example: app delTeam 6156b66f75697f7a901022f1`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -71,7 +66,7 @@ For example: app delTeam 6156b66f75697f7a901022f1`,
 			return
 		}
 
-		err = dbDeleteTeamById(args[0])
+		err = dbDelTeam(args[0])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -96,29 +91,29 @@ app showAllTeamMember TEAM_ID`,
 			return
 		}
 
-		team, err := dbShowAllMemberInTeam(id)
+		team, err := dbShowMemberInTeam(id)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
+		fmt.Println(team)
+		//fmt.Printf("List Employers in: %s with id: %s\n\n", team.MySqlTeam, team.ID.Hex())
 
-		fmt.Printf("List Employers in: %s with id: %s\n\n", team.Team, team.ID.Hex())
+		//employers := team.Member
 
-		employers := team.Member
-
-		fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
-		for i := range employers {
-			fmt.Printf("%s\t%s\t%v\t%s\n",
-				employers[i].ID.Hex(), employers[i].Name, convertNumToGender(employers[i].Gender), employers[i].DoB)
-		}
+		//fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
+		//for i := range employers {
+		//	fmt.Printf("%s\t%s\t%v\t%s\n",
+		//		employers[i].ID.Hex(), employers[i].Name, convertNumToGender(employers[i].Gender), employers[i].DoB)
+		//}
 		fmt.Println("\nAll Employers were showed")
 	},
 }
 
 var addTeamMember = &cobra.Command{
 	Use:   "addTeamMember",
-	Short: "adding an employer ID to a Team with its ID",
-	Long: `adding an employer ID to a Team with its ID as cli structure:
+	Short: "adding an employer ID to a MySqlTeam with its ID",
+	Long: `adding an employer ID to a MySqlTeam with its ID as cli structure:
 app addTeamMember TEAM_ID MEMBER_ID
 `,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -137,8 +132,8 @@ app addTeamMember TEAM_ID MEMBER_ID
 
 var delTeamMember = &cobra.Command{
 	Use:   "delTeamMember",
-	Short: "deleting an employer ID to a Team with its ID",
-	Long: `deleting an employer ID to a Team with its ID as cli structure:
+	Short: "deleting an employer ID to a MySqlTeam with its ID",
+	Long: `deleting an employer ID to a MySqlTeam with its ID as cli structure:
 app delTeamMember TEAM_ID MEMBER_ID
 `,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -147,7 +142,7 @@ app delTeamMember TEAM_ID MEMBER_ID
 			return
 		}
 
-		err = dbDelTeamMemberById(args[0], args[1])
+		err = dbDelTeamMember(args[0], args[1])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -167,7 +162,7 @@ app changeTeamName TEAM_ID NEW_NAME`,
 			return
 		}
 
-		err = dbUpdateTeam(args[0], args[1])
+		err = dbUpdateTeamName(args[0], args[1])
 		if err != nil {
 			fmt.Println(err.Error())
 			return

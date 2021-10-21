@@ -9,8 +9,10 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var cacheAddr = "localhost:6379"
-var cacheClient *redis.Client
+var (
+	cacheAddr   = fmt.Sprintf("%s:%s", conf.ServerHost, conf.CachePort)
+	cacheClient *redis.Client
+)
 
 func initCache() *redis.Client {
 	rdb := redis.NewClient(&redis.Options{

@@ -43,7 +43,7 @@ func responseAllNotFound(c *gin.Context, err error) {
 	responseError(c, nil, err)
 }
 
-func responseAllEmployeeOK(c *gin.Context, data []Employer, total int64, page int, last float64, limit int) {
+func responseAllEmployeeOK(c *gin.Context, data interface{}, total int64, page int, last float64, limit int) {
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"success":   true,
 		"data":      data,
@@ -51,11 +51,11 @@ func responseAllEmployeeOK(c *gin.Context, data []Employer, total int64, page in
 		"page":      page,
 		"last_page": last,
 		"limit":     limit,
-		"message":   "Get All Employer Successfully\n",
+		"message":   "Get All MongoEmployer Successfully\n",
 	})
 }
 
-func responseAllTeamOK(c *gin.Context, data []Teams, total int64, page int, last float64, limit int) {
+func responseAllTeamOK(c *gin.Context, data interface{}, total int64, page int, last float64, limit int) {
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"success":   true,
 		"data":      data,
@@ -63,7 +63,7 @@ func responseAllTeamOK(c *gin.Context, data []Teams, total int64, page int, last
 		"page":      page,
 		"last_page": last,
 		"limit":     limit,
-		"message":   "Get All Employer Successfully\n",
+		"message":   "Get All MongoEmployer Successfully\n",
 	})
 }
 

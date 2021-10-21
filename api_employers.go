@@ -3,7 +3,6 @@ package manager
 import (
 	json2 "encoding/json"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"math"
 	"strconv"
 
@@ -21,19 +20,18 @@ func apiGetEmployers(c *gin.Context) {
 		limit = 10
 	}
 
-	employers, total, err := mongoShowAllEmployee(page, limit)
+	employers, total, err := dbShowAllEmp(page, limit)
 	if err != nil {
 		responseAllNotFound(c, err)
 		return
 	}
 
-	last := math.Ceil(float64(total / int64(limit)))
+	last := math.Ceil(float64(int64(total) / int64(limit)))
 	if last < 1 && total > 0 {
 		last = 1
 	}
 
-	responseAllEmployeeOK(c, employers, total, page, last, limit)
-	return
+	responseAllEmployeeOK(c, employers, int64(total), page, last, limit)
 }
 
 func apiGetEmployee(c *gin.Context) {
@@ -42,54 +40,39 @@ func apiGetEmployee(c *gin.Context) {
 		responseError(c, id, err)
 		return
 	}
-
-	var employer Employer
+	var employerPost interface{}
 	data, _ := getCache(id)
-	err = json2.Unmarshal([]byte(data), &employer)
+	err = json2.Unmarshal([]byte(data), &employerPost)
 	if data != "" && err == nil {
-		responseOK(c, employer, "Get Employer successfully")
+		responseOK(c, employerPost, "Get MongoEmployer successfully")
 		return
 	}
 
-	objId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		responseError(c, objId, err)
-		return
-	}
-
-	employer, err = mongoFindEmployeeID(objId)
+	employerPost, err = dbGetEmployee(id)
 	if err != nil {
 		responseError(c, id, err)
 		return
 	}
 
-	setCache(id, employer)
-	responseOK(c, employer, "Get Employer successfully")
+	setCache(id, employerPost)
+	responseOK(c, employerPost, "Get MongoEmployer successfully")
 }
 
 func apiPostEmployer(c *gin.Context) {
-	var employer *EmployerPost
+	var employer *MongoEmployerPost
 
 	if err := c.BindJSON(&employer); err != nil {
 		responseBadRequest(c, "", err)
 		return
 	}
 
-	name, gender, dob, err := validationAddEmployer(employer.Name, employer.Gender, employer.DoB)
-	if err != nil {
-		responseBadRequest(c, "", err)
-		return
-	}
-
-	//insert the newly created object into mongodb
-	err = mongoAddEmployer(name, gender, dob)
+	err = dbAddEmployer(employer.Name, employer.Gender, employer.DoB)
 	if err != nil {
 		responseInternalServer(c, "", err)
 		return
 	}
 
-	msg := fmt.Sprintf("Insert employer name: %s, gender: %s, DoB: %s to DB successfully",
-		name, convertNumToGender(gender), dob)
+	msg := fmt.Sprintf("Insert employer name: %s, gender: %s, DoB: %s to DB successfully", employer.Name, employer.Gender, employer.DoB)
 	responseOK(c, employer, msg)
 }
 
@@ -100,42 +83,36 @@ func apiDelEmployerByID(c *gin.Context) {
 		return
 	}
 
-	err = mongoDeleteEmployer(id)
+	err = dbDelEmployee(id)
 	if err != nil {
 		responseInternalServer(c, id, err)
 		return
 	}
+
 	delCache(id)
 	responseOK(c, id, fmt.Sprintf("Employee with ID %s was deleted\n", id))
 }
 
 func apiUpdateEmployerByID(c *gin.Context) {
-	var employer *EmployerPost
-
 	id, err := validationString(c.Param("id"))
 	if err != nil {
 		responseBadRequest(c, c.Param("id"), err)
 		return
 	}
 
-	if err := c.BindJSON(&employer); err != nil {
+	var employerPost MongoEmployerPost
+	if err := c.BindJSON(&employerPost); err != nil {
 		responseBadRequest(c, id, err)
 		return
 	}
 
-	name, gender, dob, err := validationAddEmployer(employer.Name, employer.Gender, employer.DoB)
-	if err != nil {
-		responseError(c, id, err)
-		return
-	}
-
-	err = mongoUpdateEmployer(id, name, gender, dob)
+	err = dbUpdateEmployee(id, employerPost.Name, employerPost.Gender, employerPost.DoB)
 	if err != nil {
 		responseError(c, id, err)
 		return
 	}
 	delCache(id)
-	msg := fmt.Sprintf("Employer %s was updated:\nName: %s\nGender: %s\nDoB: %s\n",
-		id, name, convertNumToGender(gender), dob)
+	msg := fmt.Sprintf("MongoEmployer %s was updated:\nName: %s\nGender: %s\nDoB: %s\n",
+		id, employerPost.Name, employerPost.Gender, employerPost.DoB)
 	responseOK(c, id, msg)
 }

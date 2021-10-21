@@ -84,19 +84,17 @@ func validationObjectID(teamId string, memId string) (primitive.ObjectID, primit
 	return objId, memberId, nil
 }
 
-func validationObjID(id string) (primitive.ObjectID, error) {
-	var objId primitive.ObjectID
-
-	id, err = validationString(id)
+func validationID(teamId string, memId string) (int, int, error) {
+	var tId, mId int
+	tId, err = strconv.Atoi(teamId)
 	if err != nil {
-		return objId, err
+		return 0, 0, err
 	}
-
-	objId, err = primitive.ObjectIDFromHex(id)
+	mId, err = strconv.Atoi(memId)
 	if err != nil {
-		return objId, err
+		return 0, 0, err
 	}
-	return objId, nil
+	return tId, mId, nil
 }
 
 func validationArgs(args []string) (int, int, error) {
