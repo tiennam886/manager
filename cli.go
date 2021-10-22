@@ -43,31 +43,12 @@ func init() {
 	rootCmd.Flags().StringVar(&mode, "mode", "", "Set Server mode with --mode=server")
 	rootCmd.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
 
-	conf, err = loadConfig()
+	err := load()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	teamCol, err = connectCol(conf.MongoTeamsCol)
-	if err != nil {
-		fmt.Println("a", err)
-		return
-	}
-
-	employeeCol, err = connectCol(conf.MongoEmployeeCol)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	mySqlDB, err = connectMySql()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	cacheClient = initCache()
 	addCmd()
 }
 
@@ -89,6 +70,26 @@ func addCmd() {
 }
 
 func load() error {
+	conf, err = loadConfig()
+	if err != nil {
+		return err
+	}
 
+	teamCol, err = connectCol(conf.MongoTeamsCol)
+	if err != nil {
+		return err
+	}
+
+	employeeCol, err = connectCol(conf.MongoEmployeeCol)
+	if err != nil {
+		return err
+	}
+
+	mySqlDB, err = connectMySql()
+	if err != nil {
+		return err
+	}
+
+	cacheClient = initCache()
 	return nil
 }

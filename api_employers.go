@@ -23,7 +23,7 @@ func apiGetEmployers(c *gin.Context) {
 
 	employers, total, err := dbShowAllEmp(page, limit)
 	if err != nil {
-		responseAllNotFound(c, err)
+		responseError(c, employers, err, 404)
 		return
 	}
 
@@ -32,15 +32,16 @@ func apiGetEmployers(c *gin.Context) {
 		last = 1
 	}
 
-	responseAllEmployeeOK(c, employers, int64(total), page, last, limit)
+	responseAllDataOK(c, employers, int64(total), page, last, limit)
 }
 
 func apiGetEmployee(c *gin.Context) {
 	id, err := validationString(c.Param("id"))
 	if err != nil {
-		responseError(c, id, err)
+		responseError(c, id, err, 400)
 		return
 	}
+
 	var employerPost interface{}
 	data, _ := getCache(id)
 	err = json2.Unmarshal([]byte(data), &employerPost)
@@ -51,11 +52,12 @@ func apiGetEmployee(c *gin.Context) {
 
 	employerPost, err = dbGetEmployee(id)
 	if err != nil {
-		responseError(c, id, err)
+		responseError(c, id, err, 404)
 		return
 	}
 
 	setCache(id, employerPost)
+
 	responseOK(c, employerPost, "Get MongoEmployer successfully")
 }
 
@@ -63,13 +65,13 @@ func apiPostEmployer(c *gin.Context) {
 	var employer *MongoEmployerPost
 
 	if err := c.BindJSON(&employer); err != nil {
-		responseBadRequest(c, "", err)
+		responseError(c, nil, err, 400)
 		return
 	}
 
 	err = dbAddEmployer(employer.Name, employer.Gender, employer.DoB)
 	if err != nil {
-		responseInternalServer(c, "", err)
+		responseError(c, nil, err, 404)
 		return
 	}
 
@@ -80,39 +82,41 @@ func apiPostEmployer(c *gin.Context) {
 func apiDelEmployerByID(c *gin.Context) {
 	id, err := validationString(c.Param("id"))
 	if err != nil {
-		responseBadRequest(c, c.Param("id"), err)
+		responseError(c, nil, err, 400)
 		return
 	}
 
 	err = dbDelEmployee(id)
 	if err != nil {
-		responseInternalServer(c, id, err)
+		responseError(c, nil, err, 404)
 		return
 	}
 
 	delCache(id)
+
 	responseOK(c, id, fmt.Sprintf("Employee with ID %s was deleted\n", id))
 }
 
 func apiUpdateEmployerByID(c *gin.Context) {
 	id, err := validationString(c.Param("id"))
 	if err != nil {
-		responseBadRequest(c, c.Param("id"), err)
+		responseError(c, nil, err, 400)
 		return
 	}
 
 	var employerPost MongoEmployerPost
 	if err := c.BindJSON(&employerPost); err != nil {
-		responseBadRequest(c, id, err)
+		responseError(c, nil, err, 400)
 		return
 	}
 
 	err = dbUpdateEmployee(id, employerPost.Name, employerPost.Gender, employerPost.DoB)
 	if err != nil {
-		responseError(c, id, err)
+		responseError(c, nil, err, 404)
 		return
 	}
 	delCache(id)
+
 	msg := fmt.Sprintf("MongoEmployer %s was updated:\nName: %s\nGender: %s\nDoB: %s\n",
 		id, employerPost.Name, employerPost.Gender, employerPost.DoB)
 	responseOK(c, id, msg)

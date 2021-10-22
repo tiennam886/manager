@@ -27,16 +27,12 @@ func serverMode() error {
 	router.PATCH("/team/:id", apiChangeTeamName)
 
 	var addr string
-	addr = fmt.Sprintf("%s:%s", conf.MySqlHost, conf.MySqlPort)
+	addr = fmt.Sprintf("%s:%s", conf.ServerHost, conf.ServerPort)
 	err := router.Run(addr)
 	return err
 }
 
-func responseAllNotFound(c *gin.Context, err error) {
-	responseError(c, nil, err)
-}
-
-func responseAllEmployeeOK(c *gin.Context, data interface{}, total int64, page int, last float64, limit int) {
+func responseAllDataOK(c *gin.Context, data interface{}, total int64, page int, last float64, limit int) {
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"success":   true,
 		"data":      data,
@@ -44,32 +40,12 @@ func responseAllEmployeeOK(c *gin.Context, data interface{}, total int64, page i
 		"page":      page,
 		"last_page": last,
 		"limit":     limit,
-		"message":   "Get All MongoEmployer Successfully\n",
+		"message":   "Get All Successfully\n",
 	})
 }
 
-func responseAllTeamOK(c *gin.Context, data interface{}, total int64, page int, last float64, limit int) {
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      data,
-		"total":     total,
-		"page":      page,
-		"last_page": last,
-		"limit":     limit,
-		"message":   "Get All MongoEmployer Successfully\n",
-	})
-}
-
-func responseBadRequest(c *gin.Context, id string, err error) {
-	responseError(c, id, err)
-}
-
-func responseInternalServer(c *gin.Context, id string, err error) {
-	responseError(c, id, err)
-}
-
-func responseError(c *gin.Context, data interface{}, err error) {
-	c.IndentedJSON(http.StatusBadRequest, gin.H{
+func responseError(c *gin.Context, data interface{}, err error, code int) {
+	c.IndentedJSON(code, gin.H{
 		"success": false,
 		"data":    data,
 		"message": err.Error(),

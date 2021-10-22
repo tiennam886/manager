@@ -47,13 +47,13 @@ app showAllEmp 1 15`,
 		}
 		fmt.Println(total, employers)
 
-		//fmt.Printf("\nList of all Employers in page: %v, limt: %v, total: %v\n", page, limit, total)
+		//fmt.Printf("\nList of all Employers in page: %v, limit: %v, total: %v\n", page, limit, total)
 		//fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
 		//for i := range employers {
 		//	fmt.Printf("%s\t%s\t%v\t%s\n",
 		//		employers[i].ID.Hex(), employers[i].Name, employers[i].Gender, employers[i].DoB)
 		//}
-		//fmt.Println("\nAll Employers were showed")
+		fmt.Println("\nAll Employers were showed")
 	},
 }
 

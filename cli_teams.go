@@ -24,13 +24,13 @@ For example: app addTeam "MySqlTeam A"
 			fmt.Println(err.Error())
 			return
 		}
-		fmt.Printf("Add team with name: %s successfully", args[0])
+		fmt.Printf("Add team with name: %s successfully\n", args[0])
 	},
 }
 
 var showAllTeam = &cobra.Command{
 	Use:   "showAllTeam",
-	Short: "Show a list of all Teams",
+	Short: "Show a list of all MongoTeam",
 	Long:  `Show a list of all teams with number of total, page and limit`,
 	Run: func(cmd *cobra.Command, args []string) {
 		page, limit, err := validationArgs(args)
@@ -71,6 +71,8 @@ For example: app delTeam 6156b66f75697f7a901022f1`,
 			fmt.Println(err.Error())
 			return
 		}
+
+		fmt.Printf("Delete team with ID: %s successfully\n", args[0])
 	},
 }
 
@@ -127,6 +129,8 @@ app addTeamMember TEAM_ID MEMBER_ID
 			fmt.Println(err.Error())
 			return
 		}
+
+		fmt.Printf("Employee with ID: %s was added to team with ID: %s\n", args[1], args[0])
 	},
 }
 
@@ -147,6 +151,8 @@ app delTeamMember TEAM_ID MEMBER_ID
 			fmt.Println(err.Error())
 			return
 		}
+
+		fmt.Printf("Employee with ID: %s was deleted in team with ID: %s\n", args[1], args[0])
 	},
 }
 
@@ -167,5 +173,7 @@ app changeTeamName TEAM_ID NEW_NAME`,
 			fmt.Println(err.Error())
 			return
 		}
+
+		fmt.Printf("Team with ID: %s was changed name to: %s", args[0], args[1])
 	},
 }

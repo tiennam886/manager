@@ -8,13 +8,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type Teams struct {
+type MongoTeam struct {
 	ID     primitive.ObjectID   `bson:"_id" json:"id"`
 	Team   string               `bson:"team" json:"team"`
 	Member []primitive.ObjectID `bson:"member" json:"member"`
 }
 
-type TeamMem struct {
+type MongoTeamMem struct {
 	ID     primitive.ObjectID `bson:"_id" json:"id"`
 	Team   string             `bson:"team" json:"team"`
 	Member []MongoEmployer    `bson:"employers" json:"employers"`
@@ -50,7 +50,7 @@ func mongoGetAllTeams(page int, limit int) (interface{}, int, error) {
 		return nil, 0, err
 	}
 
-	var teams []Teams
+	var teams []MongoTeam
 	err = cursor.All(ctx, &teams)
 	if err != nil {
 		return nil, 0, err
@@ -60,7 +60,7 @@ func mongoGetAllTeams(page int, limit int) (interface{}, int, error) {
 }
 
 func mongoShowAllMemberInTeam(id string) (interface{}, error) {
-	var resp []TeamMem
+	var resp []MongoTeamMem
 
 	ctx := initCtx()
 
@@ -105,7 +105,7 @@ func mongoAddTeamMember(id string, newMemberId string) error {
 	if err != nil {
 		return err
 	}
-	teamTransforms := team.(Teams)
+	teamTransforms := team.(MongoTeam)
 	for _, id := range teamTransforms.Member {
 		if memId == id {
 			return fmt.Errorf("Member with id: %s has already been in %s\n", memId, teamTransforms.Team)
@@ -151,7 +151,7 @@ func mongoUpdateTeamMember(objId primitive.ObjectID, memId primitive.ObjectID, m
 }
 
 func mongoFindTeamID(objId primitive.ObjectID) (interface{}, error) {
-	var team Teams
+	var team MongoTeam
 
 	ctx := initCtx()
 
@@ -202,8 +202,8 @@ func mongoUpdateTeam(id string, name string) error {
 	if err != nil {
 		return err
 	}
-	teamTransforms := team.(Teams)
-	newTeam := Teams{
+	teamTransforms := team.(MongoTeam)
+	newTeam := MongoTeam{
 		ID:     objId,
 		Team:   name,
 		Member: teamTransforms.Member,

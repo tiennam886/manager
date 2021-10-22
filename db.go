@@ -47,6 +47,7 @@ func initCtx() context.Context {
 
 func connectMySql() (*sql.DB, error) {
 	mySqlSource := fmt.Sprintf("%s@tcp(%s:%s)/%s", conf.MySqlUser, conf.MySqlHost, conf.MySqlPort, conf.MySqlDatabase)
+	// root@(127.0.0.1:3306)/app
 	mySqlDB, err = sql.Open("mysql", mySqlSource)
 	return mySqlDB, err
 }
@@ -67,10 +68,12 @@ func dbAddEmployer(name string, gender string, date string) error {
 func dbShowAllEmp(page int, limit int) (interface{}, int, error) {
 	if db == "mysql" {
 		data, total, err := dbMySqlShowAllEmployees(page, limit)
+		displayMySqlEmployees(data)
 		return data, total, err
 	}
 
 	data, total, err := mongoShowAllEmployee(page, limit)
+	displayMongoEmployees(data)
 	return data, total, err
 }
 
@@ -145,9 +148,12 @@ func dbAddTeam(name string) error {
 func dbGetAllTeam(page int, limit int) (interface{}, int, error) {
 	if db == "mysql" {
 		data, total, err := dbMySqlShowAllTeams(page, limit)
+		displayMySqlTeams(data)
 		return data, total, err
 	}
+
 	data, total, err := mongoGetAllTeams(page, limit)
+	displayMongoTeams(data)
 	return data, total, err
 }
 
@@ -184,9 +190,19 @@ func dbShowMemberInTeam(id string) (interface{}, error) {
 			return nil, err
 		}
 		data, err := dbMySqlGetTeam(teamId)
+		if err != nil {
+			return nil, err
+		}
+		displayMySqlMembers(data)
 		return data, err
 	}
+
 	data, err := mongoShowAllMemberInTeam(id)
+	if err != nil {
+		return nil, err
+	}
+
+	displayMongoTeamMembers(data)
 	return data, err
 }
 
@@ -210,4 +226,52 @@ func dbDelTeamMember(teamId string, memId string) error {
 		return dbMySqlDelTeamMember(tId, mId)
 	}
 	return mongoDelTeamMemberById(teamId, memId)
+}
+
+func displayMySqlEmployees(data interface{}) {
+	employees := data.([]MySqlEmployee)
+
+	fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
+	for i := range employees {
+		fmt.Printf("%v\t%s\t%v\t%s\n",
+			employees[i].ID, employees[i].Name, employees[i].Gender, employees[i].DoB)
+	}
+}
+
+func displayMongoEmployees(data interface{}) {
+	employees := data.([]MongoEmployerPost)
+
+	fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
+	for i := range employees {
+		fmt.Printf("%v\t%s\t%v\t%s\n",
+			employees[i].ID.Hex(), employees[i].Name, employees[i].Gender, employees[i].DoB)
+	}
+}
+
+func displayMySqlTeams(data interface{}) {
+	teams := data.([]MySqlTeam)
+	fmt.Printf("ID\t\t\t\tNAME\t\n")
+	for i := range teams {
+		fmt.Printf("%v\t%s\n", teams[i].ID, teams[i].Name)
+	}
+}
+
+func displayMongoTeams(data interface{}) {
+	teams := data.([]MongoTeam)
+	fmt.Printf("ID\t\t\t\tNAME\t\n")
+	for i := range teams {
+		fmt.Printf("%v\t%s\n", teams[i].ID.Hex(), teams[i].Team)
+	}
+}
+
+func displayMongoTeamMembers(data interface{}) {
+	teamMem := data.(MongoTeamMem)
+	fmt.Printf("List Employers in: %s with id: %s\n\n", teamMem.Team, teamMem.ID.Hex())
+	displayMongoEmployees(teamMem.Member)
+}
+
+func displayMySqlMembers(data interface{}) {
+	teamMem := data.(MySqlTeamMem)
+	fmt.Printf("List Employers in: %s with id: %v\n\n", teamMem.Name, teamMem.ID)
+	displayMongoEmployees(teamMem.Members)
 }

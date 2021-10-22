@@ -22,7 +22,7 @@ func apiGetTeams(c *gin.Context) {
 
 	teams, total, err := dbGetAllTeam(page, limit)
 	if err != nil {
-		responseAllNotFound(c, err)
+		responseError(c, nil, err, 404)
 		return
 	}
 
@@ -30,11 +30,12 @@ func apiGetTeams(c *gin.Context) {
 	if last < 1 && total > 0 {
 		last = 1
 	}
-	responseAllTeamOK(c, teams, int64(total), page, last, limit)
+
+	responseAllDataOK(c, teams, int64(total), page, last, limit)
 }
 
 func apiGetAllMemberInTeam(c *gin.Context) {
-	var team TeamMem
+	var team MongoTeamMem
 
 	id := c.Param("id")
 	data, _ := getCache(id)
@@ -46,25 +47,28 @@ func apiGetAllMemberInTeam(c *gin.Context) {
 
 	resp, err := dbShowMemberInTeam(id)
 	if err != nil {
-		responseInternalServer(c, id, err)
+		responseError(c, nil, err, 404)
 		return
 	}
+
 	setCache(id, resp)
+
 	responseOK(c, resp, "All member in team has showed")
 }
 
 func apiPostTeam(c *gin.Context) {
-	var team *Teams
+	var team *MongoTeam
 	if err := c.BindJSON(&team); err != nil {
-		responseBadRequest(c, team.Team, err)
+		responseError(c, nil, err, 400)
 		return
 	}
 
 	err = dbAddTeam(team.Team)
 	if err != nil {
-		responseInternalServer(c, team.Team, err)
+		responseError(c, nil, err, 404)
 		return
 	}
+
 	responseOK(c, team, "MySqlTeam was created\n")
 }
 
@@ -72,11 +76,12 @@ func apiDelTeamByID(c *gin.Context) {
 	id := c.Param("id")
 	err = dbDelTeam(id)
 	if err != nil {
-		responseInternalServer(c, id, err)
+		responseError(c, nil, err, 404)
 		return
 	}
 
 	delCache(id)
+
 	responseOK(c, id, fmt.Sprintf("MySqlTeam with ID %s was deleted\n", id))
 }
 
@@ -86,10 +91,12 @@ func apiAddMemberToTeamByID(c *gin.Context) {
 
 	err = dbAddTeamMember(id, memberId)
 	if err != nil {
-		responseInternalServer(c, id, err)
+		responseError(c, nil, err, 404)
 		return
 	}
+
 	delCache(id)
+
 	msg := fmt.Sprintf("Add employer with id: %s in team with id: %s successfully\n", memberId, id)
 	responseOK(c, id, msg)
 }
@@ -99,29 +106,32 @@ func apiDelMemberInTeamByID(c *gin.Context) {
 	mid := c.Param("mid")
 	err = dbDelTeamMember(id, mid)
 	if err != nil {
-		responseInternalServer(c, id, err)
+		responseError(c, nil, err, 404)
 		return
 	}
+
 	delCache(id)
+
 	msg := fmt.Sprintf("Delete employer with id: %s in team with id: %s successfully\n", mid, id)
 	responseOK(c, id, msg)
 }
 
 func apiChangeTeamName(c *gin.Context) {
-	var team *Teams
+	var team *MongoTeam
 	id := c.Param("id")
 
 	if err = c.BindJSON(&team); err != nil {
-		responseBadRequest(c, team.Team, err)
+		responseError(c, nil, err, 400)
 		return
 	}
 
 	err = dbUpdateTeamName(id, team.Team)
 	if err != nil {
-		responseInternalServer(c, team.Team, err)
+		responseError(c, nil, err, 404)
 		return
 	}
 
 	delCache(id)
+
 	responseOK(c, id, "Change MySqlTeam name successfully\n")
 }
