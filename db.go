@@ -52,17 +52,20 @@ func connectMySql() (*sql.DB, error) {
 	return mySqlDB, err
 }
 
-func dbAddEmployer(name string, gender string, date string) error {
+func dbAddEmployer(name string, gender string, date string) (string, error) {
 	name, g, date, err := validationAddEmployer(name, gender, date)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if db == "mysql" {
-		return dbMySqlAddEmployee(name, g, date)
+		id, err := dbMySqlAddEmployee(name, g, date)
+		return strconv.FormatInt(id, 10), err
 	}
 
-	return mongoAddEmployer(name, g, date)
+	id, err := mongoAddEmployer(name, g, date)
+	id = id.(primitive.ObjectID).Hex()
+	return id.(string), err
 }
 
 func dbShowAllEmp(page int, limit int) (interface{}, int, error) {
@@ -132,17 +135,25 @@ func dbUpdateEmployee(id string, name string, gender string, dob string) error {
 }
 
 // MySqlTeam
-func dbAddTeam(name string) error {
+func dbAddTeam(name string) (string, error) {
 	name, err = validationString(name)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if db == "mysql" {
-		return dbMySqlAddTeam(name)
+		id, err := dbMySqlAddTeam(name)
+		if err != nil {
+			return "", err
+		}
+		return strconv.FormatInt(id, 10), err
 	}
-
-	return mongoAddTeam(name)
+	id, err := mongoAddTeam(name)
+	if err != nil {
+		return "", err
+	}
+	id = id.(primitive.ObjectID).Hex()
+	return id.(string), nil
 }
 
 func dbGetAllTeam(page int, limit int) (interface{}, int, error) {
@@ -189,10 +200,12 @@ func dbShowMemberInTeam(id string) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		data, err := dbMySqlGetTeam(teamId)
 		if err != nil {
 			return nil, err
 		}
+
 		displayMySqlMembers(data)
 		return data, err
 	}
@@ -228,10 +241,12 @@ func dbDelTeamMember(teamId string, memId string) error {
 	return mongoDelTeamMemberById(teamId, memId)
 }
 
+//display
+
 func displayMySqlEmployees(data interface{}) {
 	employees := data.([]MySqlEmployee)
 
-	fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
+	fmt.Printf("ID\tNAME\t\tGENDER\tDOB\n")
 	for i := range employees {
 		fmt.Printf("%v\t%s\t%v\t%s\n",
 			employees[i].ID, employees[i].Name, employees[i].Gender, employees[i].DoB)
@@ -243,14 +258,14 @@ func displayMongoEmployees(data interface{}) {
 
 	fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
 	for i := range employees {
-		fmt.Printf("%v\t%s\t%v\t%s\n",
+		fmt.Printf("%v\t%s\t%s\t%s\n",
 			employees[i].ID.Hex(), employees[i].Name, employees[i].Gender, employees[i].DoB)
 	}
 }
 
 func displayMySqlTeams(data interface{}) {
 	teams := data.([]MySqlTeam)
-	fmt.Printf("ID\t\t\t\tNAME\t\n")
+	fmt.Printf("ID\tNAME\t\n")
 	for i := range teams {
 		fmt.Printf("%v\t%s\n", teams[i].ID, teams[i].Name)
 	}
@@ -260,18 +275,23 @@ func displayMongoTeams(data interface{}) {
 	teams := data.([]MongoTeam)
 	fmt.Printf("ID\t\t\t\tNAME\t\n")
 	for i := range teams {
-		fmt.Printf("%v\t%s\n", teams[i].ID.Hex(), teams[i].Team)
+		fmt.Printf("%v\t%s\n", teams[i].ID.Hex(), teams[i].Name)
 	}
 }
 
 func displayMongoTeamMembers(data interface{}) {
 	teamMem := data.(MongoTeamMem)
 	fmt.Printf("List Employers in: %s with id: %s\n\n", teamMem.Team, teamMem.ID.Hex())
-	displayMongoEmployees(teamMem.Member)
+	fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
+	for i := range teamMem.Member {
+		fmt.Printf("%v\t%s\t%s\t%s\n",
+			teamMem.Member[i].ID.Hex(), teamMem.Member[i].Name,
+			convertNumToGender(teamMem.Member[i].Gender), teamMem.Member[i].DoB)
+	}
 }
 
 func displayMySqlMembers(data interface{}) {
 	teamMem := data.(MySqlTeamMem)
 	fmt.Printf("List Employers in: %s with id: %v\n\n", teamMem.Name, teamMem.ID)
-	displayMongoEmployees(teamMem.Members)
+	displayMySqlEmployees(teamMem.Members)
 }

@@ -27,7 +27,7 @@ type MongoEmployerPost struct {
 	DoB    string             `bson:"dob" json:"dob"`
 }
 
-func mongoAddEmployer(name string, gender int, date string) error {
+func mongoAddEmployer(name string, gender int, date string) (interface{}, error) {
 	ctx := initCtx()
 
 	employer := bson.M{
@@ -35,8 +35,8 @@ func mongoAddEmployer(name string, gender int, date string) error {
 		"gender": gender,
 		"dob":    date,
 	}
-	_, err := employeeCol.InsertOne(ctx, employer)
-	return err
+	resp, err := employeeCol.InsertOne(ctx, employer)
+	return resp.InsertedID, err
 }
 
 func mongoShowAllEmployee(page int, limit int) (interface{}, int, error) {

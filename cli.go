@@ -93,3 +93,40 @@ func load() error {
 	cacheClient = initCache()
 	return nil
 }
+
+//func addCmd() {
+//	// cli handles employers
+//	addEmpCmd.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
+//	rootCmd.AddCommand(addEmpCmd)
+//
+//	showAllEmp.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
+//	rootCmd.AddCommand(showAllEmp)
+//
+//	delEmpCmd.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
+//	rootCmd.AddCommand(delEmpCmd)
+//
+//	updateEmpCmd.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
+//	rootCmd.AddCommand(updateEmpCmd)
+//
+//	//cli handles teams
+//	addTeam.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
+//	rootCmd.AddCommand(addTeam)
+//
+//	showAllTeam.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
+//	rootCmd.AddCommand(showAllTeam)
+//
+//	delTeamCmd.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
+//	rootCmd.AddCommand(delTeamCmd)
+//
+//	showAllTeamMember.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
+//	rootCmd.AddCommand(showAllTeamMember)
+//
+//	addTeamMember.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
+//	rootCmd.AddCommand(addTeamMember)
+//
+//	delTeamMember.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
+//	rootCmd.AddCommand(delTeamMember)
+//
+//	changeTeamName.Flags().StringVar(&db, "db", "", "Set database to use, default is Mongo, set to MySql by --db=mysql")
+//	rootCmd.AddCommand(changeTeamName)
+//}

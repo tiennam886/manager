@@ -19,13 +19,13 @@ For example: app addEmp "Tran Nam" 0 "2000-01-01"`,
 			return
 		}
 
-		err := dbAddEmployer(args[0], args[1], args[2])
+		id, err := dbAddEmployer(args[0], args[1], args[2])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
 
-		fmt.Printf("Insert employer name: %s, gender: %s, DoB: %s successfully\n", args[0], args[1], args[2])
+		fmt.Printf("Insert employer name: %s, gender: %s, DoB: %s successfully with id %s\n", args[0], args[1], args[2], id)
 	},
 }
 
@@ -40,19 +40,12 @@ app showAllEmp 1 15`,
 			fmt.Println(err.Error())
 			return
 		}
-		employers, total, err := dbShowAllEmp(page, limit)
+		_, _, err = dbShowAllEmp(page, limit)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		fmt.Println(total, employers)
 
-		//fmt.Printf("\nList of all Employers in page: %v, limit: %v, total: %v\n", page, limit, total)
-		//fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
-		//for i := range employers {
-		//	fmt.Printf("%s\t%s\t%v\t%s\n",
-		//		employers[i].ID.Hex(), employers[i].Name, employers[i].Gender, employers[i].DoB)
-		//}
 		fmt.Println("\nAll Employers were showed")
 	},
 }

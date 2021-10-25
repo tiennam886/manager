@@ -9,6 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type TeamMem struct {
+	ID     string         `bson:"_id" json:"id"`
+	Name   string         `bson:"name" json:"name"`
+	Member []EmployerPost `bson:"employers" json:"employers"`
+}
+
 func apiGetTeams(c *gin.Context) {
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
@@ -35,7 +41,7 @@ func apiGetTeams(c *gin.Context) {
 }
 
 func apiGetAllMemberInTeam(c *gin.Context) {
-	var team MongoTeamMem
+	var team TeamMem
 
 	id := c.Param("id")
 	data, _ := getCache(id)
@@ -57,19 +63,19 @@ func apiGetAllMemberInTeam(c *gin.Context) {
 }
 
 func apiPostTeam(c *gin.Context) {
-	var team *MongoTeam
+	var team TeamMem
 	if err := c.BindJSON(&team); err != nil {
 		responseError(c, nil, err, 400)
 		return
 	}
 
-	err = dbAddTeam(team.Team)
+	team.ID, err = dbAddTeam(team.Name)
 	if err != nil {
 		responseError(c, nil, err, 404)
 		return
 	}
 
-	responseOK(c, team, "MySqlTeam was created\n")
+	responseOK(c, team, "Team was created\n")
 }
 
 func apiDelTeamByID(c *gin.Context) {
@@ -82,7 +88,7 @@ func apiDelTeamByID(c *gin.Context) {
 
 	delCache(id)
 
-	responseOK(c, id, fmt.Sprintf("MySqlTeam with ID %s was deleted\n", id))
+	responseOK(c, id, fmt.Sprintf("Team with ID %s was deleted\n", id))
 }
 
 func apiAddMemberToTeamByID(c *gin.Context) {
@@ -117,7 +123,7 @@ func apiDelMemberInTeamByID(c *gin.Context) {
 }
 
 func apiChangeTeamName(c *gin.Context) {
-	var team *MongoTeam
+	var team *TeamMem
 	id := c.Param("id")
 
 	if err = c.BindJSON(&team); err != nil {
@@ -125,7 +131,7 @@ func apiChangeTeamName(c *gin.Context) {
 		return
 	}
 
-	err = dbUpdateTeamName(id, team.Team)
+	err = dbUpdateTeamName(id, team.Name)
 	if err != nil {
 		responseError(c, nil, err, 404)
 		return
@@ -133,5 +139,5 @@ func apiChangeTeamName(c *gin.Context) {
 
 	delCache(id)
 
-	responseOK(c, id, "Change MySqlTeam name successfully\n")
+	responseOK(c, id, "Change Team's name successfully\n")
 }

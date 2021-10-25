@@ -11,7 +11,7 @@ var addTeam = &cobra.Command{
 	Short: "Adding a MySqlTeam with its name",
 	Long: `Adding a MySqlTeam with its name with cli structure:
 app addTeam NAME
-For example: app addTeam "MySqlTeam A"
+For example: app addTeam "Team A"
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
@@ -19,12 +19,12 @@ For example: app addTeam "MySqlTeam A"
 			return
 		}
 
-		err = dbAddTeam(args[0])
+		id, err := dbAddTeam(args[0])
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		fmt.Printf("Add team with name: %s successfully\n", args[0])
+		fmt.Printf("Add team with name: %s successfully with id %s\n", args[0], id)
 	},
 }
 
@@ -39,17 +39,12 @@ var showAllTeam = &cobra.Command{
 			return
 		}
 
-		teams, total, err1 := dbGetAllTeam(page, limit)
-		if err1 != nil {
+		_, _, err = dbGetAllTeam(page, limit)
+		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		fmt.Println(teams, total)
-		//fmt.Printf("\nList of all Employers in page: %v, limt: %v, total: %v\n", page, limit, total)
-		//fmt.Printf("ID\t\t\t\tNAME\t\n")
-		//for i := range teams {
-		//	fmt.Printf("%s\t%s\n", teams[i].ID.Hex(), teams[i].MySqlTeam)
-		//}
+
 		fmt.Println("\nAll Employers were showed")
 	},
 }
@@ -93,21 +88,12 @@ app showAllTeamMember TEAM_ID`,
 			return
 		}
 
-		team, err := dbShowMemberInTeam(id)
+		_, err = dbShowMemberInTeam(id)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		fmt.Println(team)
-		//fmt.Printf("List Employers in: %s with id: %s\n\n", team.MySqlTeam, team.ID.Hex())
 
-		//employers := team.Member
-
-		//fmt.Printf("ID\t\t\t\tNAME\t\tGENDER\tDOB\n")
-		//for i := range employers {
-		//	fmt.Printf("%s\t%s\t%v\t%s\n",
-		//		employers[i].ID.Hex(), employers[i].Name, convertNumToGender(employers[i].Gender), employers[i].DoB)
-		//}
 		fmt.Println("\nAll Employers were showed")
 	},
 }

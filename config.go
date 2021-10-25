@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -33,6 +32,5 @@ func loadConfig() (TomlConfig, error) {
 	}
 
 	_, err = toml.DecodeReader(in, &conf)
-	fmt.Println(conf.MySqlHost)
 	return conf, err
 }

@@ -10,25 +10,25 @@ import (
 
 type MongoTeam struct {
 	ID     primitive.ObjectID   `bson:"_id" json:"id"`
-	Team   string               `bson:"team" json:"team"`
+	Name   string               `bson:"name" json:"name"`
 	Member []primitive.ObjectID `bson:"member" json:"member"`
 }
 
 type MongoTeamMem struct {
 	ID     primitive.ObjectID `bson:"_id" json:"id"`
-	Team   string             `bson:"team" json:"team"`
+	Team   string             `bson:"name" json:"name"`
 	Member []MongoEmployer    `bson:"employers" json:"employers"`
 }
 
-func mongoAddTeam(name string) error {
+func mongoAddTeam(name string) (interface{}, error) {
 	ctx := initCtx()
 
 	team := bson.M{
-		"team":   name,
+		"name":   name,
 		"member": []string{},
 	}
-	_, err := teamCol.InsertOne(ctx, team)
-	return err
+	resp, err := teamCol.InsertOne(ctx, team)
+	return resp.InsertedID, err
 }
 
 func mongoGetAllTeams(page int, limit int) (interface{}, int, error) {
@@ -108,7 +108,7 @@ func mongoAddTeamMember(id string, newMemberId string) error {
 	teamTransforms := team.(MongoTeam)
 	for _, id := range teamTransforms.Member {
 		if memId == id {
-			return fmt.Errorf("Member with id: %s has already been in %s\n", memId, teamTransforms.Team)
+			return fmt.Errorf("Member with id: %s has already been in %s\n", memId, teamTransforms.Name)
 		}
 	}
 
@@ -157,7 +157,7 @@ func mongoFindTeamID(objId primitive.ObjectID) (interface{}, error) {
 
 	err = teamCol.FindOne(ctx, bson.M{"_id": objId}).Decode(&team)
 	if err != nil {
-		return team, fmt.Errorf("MySqlTeam with id:  %s was not found\n", objId)
+		return team, fmt.Errorf("Team with id:  %s was not found\n", objId)
 	}
 	return team, nil
 }
@@ -180,7 +180,7 @@ func mongoDeleteTeamById(id string) error {
 		return err
 	}
 
-	fmt.Printf("MySqlTeam %s was deleted\n", id)
+	fmt.Printf("Team %s was deleted\n", id)
 	return nil
 
 }
@@ -205,7 +205,7 @@ func mongoUpdateTeam(id string, name string) error {
 	teamTransforms := team.(MongoTeam)
 	newTeam := MongoTeam{
 		ID:     objId,
-		Team:   name,
+		Name:   name,
 		Member: teamTransforms.Member,
 	}
 	update := bson.M{
@@ -215,6 +215,6 @@ func mongoUpdateTeam(id string, name string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("MySqlTeam %s was updated with new name: %s\n", id, name)
+	fmt.Printf("Team %s was updated with new name: %s\n", id, name)
 	return nil
 }

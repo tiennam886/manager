@@ -13,10 +13,14 @@ type MySqlTeamMem struct {
 	Members []MySqlEmployee `json:"members"`
 }
 
-func dbMySqlAddTeam(name string) error {
+func dbMySqlAddTeam(name string) (int64, error) {
 	qr := fmt.Sprintf("INSERT INTO %s(name) VALUES (?);", conf.MySqlTeams)
-	_, err := mySqlDB.Query(qr, name)
-	return err
+	resp, err := mySqlDB.Exec(qr, name)
+	if err != nil {
+		return -1, err
+	}
+	id, err := resp.LastInsertId()
+	return id, err
 }
 
 func dbMySqlShowAllTeams(offset int, limit int) (interface{}, int, error) {

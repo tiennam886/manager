@@ -9,10 +9,14 @@ type MySqlEmployee struct {
 	DoB    string `json:"dob"`
 }
 
-func dbMySqlAddEmployee(name string, gender int, dob string) error {
+func dbMySqlAddEmployee(name string, gender int, dob string) (int64, error) {
 	qr := fmt.Sprintf("INSERT INTO %s(name, gender, dob) VALUES (?, ?, ?);", conf.MySqlEmployee)
-	_, err := mySqlDB.Query(qr, name, gender, dob)
-	return err
+	resp, err := mySqlDB.Exec(qr, name, gender, dob)
+	id, err := resp.LastInsertId()
+	if err != nil {
+		return -1, err
+	}
+	return id, err
 }
 
 func dbMySqlShowAllEmployees(offset int, limit int) (interface{}, int, error) {
