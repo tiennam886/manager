@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/tiennam886/manager/employee/internal/persistence"
 	"time"
 
 	"github.com/asaskevich/govalidator"
@@ -10,10 +11,9 @@ import (
 )
 
 type AddEmployeeCommand struct {
-	Name    string    `json:"name"`
-	DOB     time.Time `json:"dob"`
-	Gender  string    `json:"gender"`
-	Address string    `json:"address"`
+	Name   string    `json:"name"`
+	DOB    time.Time `json:"dob"`
+	Gender string    `json:"gender"`
 }
 
 func (c AddEmployeeCommand) Valid() error {
@@ -32,8 +32,8 @@ func AddEmployee(ctx context.Context, command AddEmployeeCommand) (employee mode
 		DOB:    command.DOB,
 		Gender: ToGenderNum(command.Gender),
 	}
-
-	return
+	err = persistence.Employees().Save(ctx, employee)
+	return employee, err
 }
 
 func ToGenderNum(gender string) int {

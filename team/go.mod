@@ -1,4 +1,4 @@
-module github.com/tiennam886/manager/employee
+module github.com/tiennam886/manager/team
 
 go 1.17
 

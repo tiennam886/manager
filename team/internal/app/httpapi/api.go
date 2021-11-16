@@ -2,14 +2,12 @@ package httpapi
 
 import (
 	"context"
-	"github.com/tiennam886/manager/pkg/messaging/httpsub"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"log"
 	"net"
 	"net/http"
 	"time"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 func v1(r *chi.Mux) {
@@ -17,14 +15,12 @@ func v1(r *chi.Mux) {
 		r.Use(middleware.Timeout(30 * time.Second))
 		r.Use(middleware.Recoverer)
 
-		r.Route("/employee", func(r chi.Router) {
-			r.Post("/", EmployeeAdd)
-			r.Get("/{uid}", EmployeeFindByUID)
-			r.Delete("/{uid}", EmployeeDeleteByUID)
-			r.Patch("/{uid}", EmployeeUpdateByUID)
+		r.Route("/team", func(r chi.Router) {
+			r.Post("/", TeamAdd)
+			r.Get("/{uid}", TeamFindByUID)
+			r.Delete("/{uid}", TeamDeleteByUID)
 
-			r.Patch("/event", httpsub.HTTPHandler())
-
+			r.Get("/notice", TeamNotice)
 		})
 	})
 }

@@ -3,19 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/tiennam886/manager/team/internal/app/httpapi"
+	"github.com/tiennam886/manager/team/internal/config"
+	"github.com/tiennam886/manager/team/internal/persistence"
+	"github.com/urfave/cli/v2"
 	"os"
 	"time"
-
-	"github.com/tiennam886/manager/employee/internal/app/httpapi"
-	"github.com/tiennam886/manager/employee/internal/config"
-	"github.com/tiennam886/manager/employee/internal/persistence"
-
-	"github.com/urfave/cli/v2"
 )
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "Employees Management"
+	app.Name = "Employee Management"
 	app.Version = "0.0.1"
 	app.Compiled = time.Now()
 	app.Flags = []cli.Flag{
@@ -41,7 +39,7 @@ func main() {
 				&cli.StringFlag{
 					Name:    "addr",
 					Aliases: []string{"address"},
-					Value:   "localhost:8080",
+					Value:   "localhost:8081",
 					Usage:   "specify which address to serve on",
 				},
 			},
@@ -64,7 +62,7 @@ func Serve(c *cli.Context) error {
 		return err
 	}
 
-	if err := persistence.LoadEmployeeRepository(); err != nil {
+	if err := persistence.LoadTeamRepositoryWithMongoDB(); err != nil {
 		return err
 	}
 

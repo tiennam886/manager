@@ -1,15 +1,17 @@
 package httpapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-redis/redis"
 	"github.com/tiennam886/manager/employee/internal/service"
 	"github.com/tiennam886/manager/pkg/httputil"
 
 	"net/http"
 )
 
-func StaffAdd(w http.ResponseWriter, r *http.Request) {
+func EmployeeAdd(w http.ResponseWriter, r *http.Request) {
 	var payload service.AddEmployeeCommand
 
 	if err := httputil.BindJSON(r, &payload); err != nil {
@@ -17,22 +19,22 @@ func StaffAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	staff, err := service.AddStaff(r.Context(), payload)
+	employee, err := service.AddEmployee(r.Context(), payload)
 	if err != nil {
 		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
-		Message: fmt.Sprintf("Added staff uid=%s", staff.UID),
-		Data:    staff,
+		Message: fmt.Sprintf("Added staff uid=%s", employee.UID),
+		Data:    employee,
 	})
 }
 
-func StaffFindByUID(w http.ResponseWriter, r *http.Request) {
+func EmployeeFindByUID(w http.ResponseWriter, r *http.Request) {
 	uid := chi.URLParam(r, "uid")
 
-	staff, err := service.FindStaffByUID(r.Context(), service.FindStaffByUIDCommand(uid))
+	staff, err := service.FindStaffByUID(r.Context(), service.FindEmployeeByUIDCommand(uid))
 	if err != nil {
 		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
 		return
@@ -44,10 +46,10 @@ func StaffFindByUID(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func StaffDeleteByUID(w http.ResponseWriter, r *http.Request) {
+func EmployeeDeleteByUID(w http.ResponseWriter, r *http.Request) {
 	uid := chi.URLParam(r, "uid")
 
-	err := service.DeleteStaffByUID(r.Context(), service.DeleteStaffByUIDCommand(uid))
+	err := service.DeleteEmployeeByUID(r.Context(), service.DeleteEmployeeByUIDCommand(uid))
 	if err != nil {
 		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
 		return
@@ -55,5 +57,48 @@ func StaffDeleteByUID(w http.ResponseWriter, r *http.Request) {
 
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
 		Message: fmt.Sprintf("Deleted staff uid=%s", uid),
+	})
+}
+
+func EmployeeUpdateByUID(w http.ResponseWriter, r *http.Request) {
+	uid := chi.URLParam(r, "uid")
+
+	var payload service.UpdateEmployeeCommand
+	if err := httputil.BindJSON(r, &payload); err != nil {
+		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	err := service.UpdateEmployeeByUid(r.Context(), service.UpdateEmployeeByUIDCommand(uid), payload)
+	if err != nil {
+		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
+		Message: fmt.Sprintf("Updated staff uid=%s", uid),
+		Data:    payload,
+	})
+}
+
+var redisClient = redis.NewClient(&redis.Options{
+	Addr: "localhost:6379",
+})
+
+func EmployeeAddToTeam(w http.ResponseWriter, r *http.Request) {
+	eid := chi.URLParam(r, "eid")
+	tid := chi.URLParam(r, "tid")
+
+	payload, err := json.Marshal(eid + tid)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := redisClient.Publish("send-user-data", payload).Err(); err != nil {
+		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
+		Message: fmt.Sprintf("Add employee eid=%s to team tid=%s", eid, tid),
 	})
 }
