@@ -11,7 +11,8 @@ import (
 )
 
 type AddTeamCommand struct {
-	Name string `json:"name"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func (c AddTeamCommand) Valid() error {
@@ -19,15 +20,16 @@ func (c AddTeamCommand) Valid() error {
 	return err
 }
 
-func AddTeam(ctx context.Context, command AddTeamCommand) (employee model.Team, err error) {
+func AddTeam(ctx context.Context, command AddTeamCommand) (team model.Team, err error) {
 	if err = command.Valid(); err != nil {
 		return
 	}
 
-	employee = model.Team{
-		UID:  uuid.NewString(),
-		Name: command.Name,
+	team = model.Team{
+		UID:         uuid.NewString(),
+		Name:        command.Name,
+		Description: command.Description,
 	}
-	err = persistence.Team().Save(ctx, employee)
-	return employee, err
+	err = persistence.Teams().Save(ctx, team)
+	return team, err
 }

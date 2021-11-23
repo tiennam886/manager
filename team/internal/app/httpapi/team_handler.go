@@ -1,13 +1,16 @@
 package httpapi
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-redis/redis"
-	"github.com/tiennam886/manager/pkg/httputil"
-	"github.com/tiennam886/manager/team/internal/service"
 	"net/http"
+	"net/url"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/tiennam886/manager/pkg/httputil"
+	"github.com/tiennam886/manager/pkg/messaging"
+	"github.com/tiennam886/manager/pkg/messaging/httppub"
+	"github.com/tiennam886/manager/team/internal/service"
 )
 
 func TeamAdd(w http.ResponseWriter, r *http.Request) {
@@ -59,26 +62,38 @@ func TeamDeleteByUID(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-var redisClient = redis.NewClient(&redis.Options{
-	Addr: "localhost:6379",
-})
+type Command struct {
+	Event string
+	Json  []byte
+}
+
+func (c Command) Name() string {
+	return c.Event
+}
+
+func (c Command) JSON() []byte {
+	return c.Json
+}
 
 func TeamNotice(w http.ResponseWriter, r *http.Request) {
-	subscriber := redisClient.Subscribe("send-user-data")
-
-	var user string
-	msg, err := subscriber.ReceiveMessage()
+	pub := httppub.NewPublisher(
+		"add-team",
+		url.URL{
+			Host: "localhost:8080",
+			Path: "/api/v1/employee/event",
+		},
+		r.Header)
+	err := httppub.ConnectPub(*pub, "add-team")
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
 	}
-
-	if err := json.Unmarshal([]byte(msg.Payload), &user); err != nil {
-		panic(err)
+	var event messaging.Event
+	event = &Command{
+		Event: "add-team",
+		Json:  []byte{},
 	}
+	httppub.Publish(event)
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
-		Message: fmt.Sprintf("Deleted staff uid=%s", user),
+		Data: event,
 	})
-
-	fmt.Println("Received message from " + msg.Channel + " channel.")
-	fmt.Printf("%+v\n", user)
 }

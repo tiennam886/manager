@@ -73,7 +73,7 @@ type EmployeeDocument struct {
 	ID     primitive.ObjectID `bson:"_id"`
 	UID    string             `bson:"uid"`
 	Name   string             `bson:"name"`
-	DOB    primitive.DateTime `bson:"dob"`
+	DOB    string             `bson:"dob"`
 	Gender int                `bson:"gender"`
 }
 
@@ -82,7 +82,7 @@ func toStaffDocument(s model.Employee) EmployeeDocument {
 		ID:     primitive.NewObjectID(),
 		UID:    s.UID,
 		Name:   s.Name,
-		DOB:    primitive.NewDateTimeFromTime(s.DOB),
+		DOB:    s.DOB,
 		Gender: s.Gender,
 	}
 }
@@ -91,7 +91,7 @@ func (s EmployeeDocument) ToModel() model.Employee {
 	return model.Employee{
 		UID:    s.UID,
 		Name:   s.Name,
-		DOB:    s.DOB.Time(),
+		DOB:    s.DOB,
 		Gender: s.Gender,
 	}
 }

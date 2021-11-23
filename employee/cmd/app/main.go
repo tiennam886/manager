@@ -44,6 +44,12 @@ func main() {
 					Value:   "localhost:8080",
 					Usage:   "specify which address to serve on",
 				},
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Value:   "postgres",
+					Usage:   "set name of database to use",
+				},
 			},
 		},
 	}
@@ -64,7 +70,7 @@ func Serve(c *cli.Context) error {
 		return err
 	}
 
-	if err := persistence.LoadEmployeeRepository(); err != nil {
+	if err := persistence.LoadEmployeeRepository(c.String("db")); err != nil {
 		return err
 	}
 

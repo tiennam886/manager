@@ -2,7 +2,6 @@ package httpapi
 
 import (
 	"context"
-	"github.com/tiennam886/manager/pkg/messaging/httpsub"
 	"log"
 	"net"
 	"net/http"
@@ -23,7 +22,7 @@ func v1(r *chi.Mux) {
 			r.Delete("/{uid}", EmployeeDeleteByUID)
 			r.Patch("/{uid}", EmployeeUpdateByUID)
 
-			r.Patch("/event", httpsub.HTTPHandler())
+			r.Get("/event/{event}", EventHandler)
 
 		})
 	})

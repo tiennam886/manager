@@ -2,6 +2,8 @@ package persistence
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/tiennam886/manager/employee/internal/model"
 )
 
@@ -65,8 +67,18 @@ func Employees() EmployeeRepository {
 	return employees
 }
 
-func LoadEmployeeRepository() (err error) {
-	err = LoadEmployeeRepositoryWithMongoDB()
+func LoadEmployeeRepository(db string) (err error) {
+	switch db {
+	case "mongo":
+		err = LoadEmployeeRepositoryWithMongoDB()
+	case "postgres":
+		err = LoadEmployeeRepositoryWithPostgresql()
+	case "mysql":
+		err = LoadEmployeeRepositoryWithMysql()
+	default:
+		err = fmt.Errorf("invalid database, choose mongo, postgres or mysql")
+	}
+
 	if err != nil {
 		return err
 	}
@@ -85,6 +97,16 @@ func LoadEmployeeRepository() (err error) {
 
 func LoadEmployeeRepositoryWithMongoDB() (err error) {
 	employeeDB, err = newMongoEmployeeRepository()
+	return
+}
+
+func LoadEmployeeRepositoryWithPostgresql() (err error) {
+	employeeDB, err = newPostgresqlEmployeeRepository()
+	return
+}
+
+func LoadEmployeeRepositoryWithMysql() (err error) {
+	employeeDB, err = newMySqlEmployeeRepository()
 	return
 }
 

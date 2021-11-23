@@ -2,14 +2,16 @@ package persistence
 
 import (
 	"context"
+	"time"
+
 	"github.com/tiennam886/manager/team/internal/config"
 	"github.com/tiennam886/manager/team/internal/model"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"time"
 )
 
 type mongoTeamRepository struct {
@@ -68,22 +70,25 @@ func (repo *mongoTeamRepository) Remove(ctx context.Context, uid string) error {
 }
 
 type TeamDocument struct {
-	ID   primitive.ObjectID `bson:"_id"`
-	UID  string             `bson:"uid"`
-	Name string             `bson:"name"`
+	ID          primitive.ObjectID `bson:"_id"`
+	UID         string             `bson:"uid"`
+	Name        string             `bson:"name"`
+	Description string             `bson:"description"`
 }
 
 func toTeamDocument(s model.Team) TeamDocument {
 	return TeamDocument{
-		ID:   primitive.NewObjectID(),
-		UID:  s.UID,
-		Name: s.Name,
+		ID:          primitive.NewObjectID(),
+		UID:         s.UID,
+		Name:        s.Name,
+		Description: s.Description,
 	}
 }
 
 func (s TeamDocument) ToModel() model.Team {
 	return model.Team{
-		UID:  s.UID,
-		Name: s.Name,
+		UID:         s.UID,
+		Name:        s.Name,
+		Description: s.Description,
 	}
 }

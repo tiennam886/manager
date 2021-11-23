@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
+
 	"github.com/tiennam886/manager/team/internal/model"
 	"github.com/tiennam886/manager/team/internal/persistence"
 )
@@ -24,5 +26,5 @@ func UpdateTeamByUid(ctx context.Context, command UpdateTeamByUIDCommand, data m
 		return err
 	}
 
-	return persistence.Team().Update(ctx, string(command), data)
+	return persistence.Teams().Update(ctx, string(command), data)
 }

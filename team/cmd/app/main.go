@@ -3,17 +3,19 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/tiennam886/manager/team/internal/app/httpapi"
 	"github.com/tiennam886/manager/team/internal/config"
 	"github.com/tiennam886/manager/team/internal/persistence"
+
 	"github.com/urfave/cli/v2"
-	"os"
-	"time"
 )
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "Employee Management"
+	app.Name = "Teams Management"
 	app.Version = "0.0.1"
 	app.Compiled = time.Now()
 	app.Flags = []cli.Flag{
@@ -26,7 +28,7 @@ func main() {
 		&cli.StringFlag{
 			Name:    "env_prefix",
 			Aliases: []string{"p"},
-			Value:   "EMP",
+			Value:   "TEAM",
 			Usage:   "set path to environment prefix",
 		},
 	}
@@ -41,6 +43,12 @@ func main() {
 					Aliases: []string{"address"},
 					Value:   "localhost:8081",
 					Usage:   "specify which address to serve on",
+				},
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Value:   "postgres",
+					Usage:   "set name of database to use",
 				},
 			},
 		},
@@ -62,7 +70,7 @@ func Serve(c *cli.Context) error {
 		return err
 	}
 
-	if err := persistence.LoadTeamRepositoryWithMongoDB(); err != nil {
+	if err := persistence.LoadTeamRepository(c.String("db")); err != nil {
 		return err
 	}
 

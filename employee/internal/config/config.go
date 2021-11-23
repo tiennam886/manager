@@ -17,6 +17,7 @@ type Config struct {
 	RedisUrl      string
 	MysqlUrl      string
 	EmployeeTable string
+	PostgresqlUrl string
 }
 
 func Get() Config {

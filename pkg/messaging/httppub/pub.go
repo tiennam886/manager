@@ -24,7 +24,7 @@ func NewPublisher(name string, endpoint url.URL, header http.Header) *Publisher 
 	return &Publisher{name, endpoint, header}
 }
 
-func (p *Publisher) doRequest(e messaging.Event) error {
+func (p *Publisher) DoRequest(e messaging.Event) error {
 	if e.Name() == "" || e.JSON() == nil || len(e.JSON()) == 0 {
 		return errors.New("publisher cannot do request with invalid event")
 	}
@@ -60,7 +60,7 @@ func ConnectPub(p Publisher, eventName string) error {
 	if !ok {
 		pubs = make([]Publisher, 0)
 	}
-
+	fmt.Println(_eventPubs)
 	for _, pub := range pubs {
 		if pub.Name == p.Name {
 			return errors.New("publisher already registered")
@@ -103,7 +103,7 @@ func Publish(event messaging.Event) {
 
 	for _, pub := range pubs {
 		go func() {
-			_ = pub.doRequest(event)
+			_ = pub.DoRequest(event)
 		}()
 	}
 }

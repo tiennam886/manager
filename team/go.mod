@@ -4,12 +4,12 @@ go 1.17
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
-	github.com/go-chi/chi/v5 v5.0.5
+	github.com/go-chi/chi/v5 v5.0.6
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/tiennam886/manager v0.0.0-20211109094018-5249ff892ca4
+	github.com/tiennam886/manager/pkg v0.0.0-20211116023318-d4810a60dcd8
 	github.com/urfave/cli/v2 v2.3.0
 	go.mongodb.org/mongo-driver v1.7.4
 )

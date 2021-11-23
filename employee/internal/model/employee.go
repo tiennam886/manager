@@ -1,12 +1,10 @@
 package model
 
-import "time"
-
 type Employee struct {
-	UID    string    `json:"uid"`
-	Name   string    `json:"name"`
-	DOB    time.Time `json:"dob"`
-	Gender int       `json:"gender"`
+	UID    string `json:"uid"`
+	Name   string `json:"name"`
+	DOB    string `json:"dob"`
+	Gender int    `json:"gender"`
 }
 
 func (e Employee) ToGenderStr() string {

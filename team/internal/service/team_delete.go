@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+
 	"github.com/google/uuid"
+
 	"github.com/tiennam886/manager/team/internal/persistence"
 )
 
@@ -18,5 +20,5 @@ func DeleteTeamByUID(ctx context.Context, command DeleteTeamByUIDCommand) error 
 		return err
 	}
 
-	return persistence.Team().Remove(ctx, string(command))
+	return persistence.Teams().Remove(ctx, string(command))
 }

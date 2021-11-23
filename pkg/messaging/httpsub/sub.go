@@ -2,6 +2,7 @@ package httpsub
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sync"
@@ -42,7 +43,7 @@ func dispatchEvent(event string, data []byte) {
 	if !ok || subs == nil || len(subs) == 0 {
 		return
 	}
-
+	fmt.Println(data)
 	for _, sub := range subs {
 		go func(sub Subscriber) {
 			sub.C <- data

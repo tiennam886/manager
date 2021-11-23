@@ -1,14 +1,14 @@
 package httpapi
 
 import (
-	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
-	"github.com/go-redis/redis"
+
 	"github.com/tiennam886/manager/employee/internal/service"
 	"github.com/tiennam886/manager/pkg/httputil"
-
-	"net/http"
+	"github.com/tiennam886/manager/pkg/messaging/httpsub"
 )
 
 func EmployeeAdd(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +34,7 @@ func EmployeeAdd(w http.ResponseWriter, r *http.Request) {
 func EmployeeFindByUID(w http.ResponseWriter, r *http.Request) {
 	uid := chi.URLParam(r, "uid")
 
-	staff, err := service.FindStaffByUID(r.Context(), service.FindEmployeeByUIDCommand(uid))
+	employee, err := service.FindStaffByUID(r.Context(), service.FindEmployeeByUIDCommand(uid))
 	if err != nil {
 		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
 		return
@@ -42,7 +42,7 @@ func EmployeeFindByUID(w http.ResponseWriter, r *http.Request) {
 
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
 		Message: fmt.Sprintf("Found staff uid=%s", uid),
-		Data:    staff,
+		Data:    employee,
 	})
 }
 
@@ -81,24 +81,8 @@ func EmployeeUpdateByUID(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-var redisClient = redis.NewClient(&redis.Options{
-	Addr: "localhost:6379",
-})
-
-func EmployeeAddToTeam(w http.ResponseWriter, r *http.Request) {
-	eid := chi.URLParam(r, "eid")
-	tid := chi.URLParam(r, "tid")
-
-	payload, err := json.Marshal(eid + tid)
-	if err != nil {
-		panic(err)
-	}
-
-	if err := redisClient.Publish("send-user-data", payload).Err(); err != nil {
-		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
-		return
-	}
-	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
-		Message: fmt.Sprintf("Add employee eid=%s to team tid=%s", eid, tid),
-	})
+func EventHandler(w http.ResponseWriter, r *http.Request) {
+	sub := httpsub.NewSubscriber("add-team")
+	httpsub.ConnectSub(*sub, "add-team")
+	httpsub.HTTPHandler(w, r)
 }

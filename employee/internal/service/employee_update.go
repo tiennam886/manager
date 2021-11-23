@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
@@ -13,9 +12,9 @@ import (
 
 type UpdateEmployeeByUIDCommand string
 type UpdateEmployeeCommand struct {
-	Name   string    `json:"name"`
-	DOB    time.Time `json:"dob"`
-	Gender string    `json:"gender"`
+	Name   string `json:"name"`
+	DOB    string `json:"dob"`
+	Gender string `json:"gender"`
 }
 
 func (c UpdateEmployeeByUIDCommand) Valid() error {
@@ -28,13 +27,18 @@ func UpdateEmployeeByUid(ctx context.Context, command UpdateEmployeeByUIDCommand
 		return err
 	}
 
+	date, err := ValidateDate(data.DOB)
+	if err != nil {
+		return
+	}
+
 	if _, err = govalidator.ValidateStruct(data); err != nil {
 		return err
 	}
 	newEmployee := model.Employee{
 		UID:    string(command),
 		Name:   data.Name,
-		DOB:    data.DOB,
+		DOB:    date,
 		Gender: ToGenderNum(data.Gender),
 	}
 

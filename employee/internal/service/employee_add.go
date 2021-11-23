@@ -2,18 +2,20 @@ package service
 
 import (
 	"context"
-	"github.com/tiennam886/manager/employee/internal/persistence"
+	"fmt"
 	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
+
 	"github.com/tiennam886/manager/employee/internal/model"
+	"github.com/tiennam886/manager/employee/internal/persistence"
 )
 
 type AddEmployeeCommand struct {
-	Name   string    `json:"name"`
-	DOB    time.Time `json:"dob"`
-	Gender string    `json:"gender"`
+	Name   string `json:"name"`
+	DOB    string `json:"dob"`
+	Gender string `json:"gender"`
 }
 
 func (c AddEmployeeCommand) Valid() error {
@@ -26,10 +28,15 @@ func AddEmployee(ctx context.Context, command AddEmployeeCommand) (employee mode
 		return
 	}
 
+	date, err := ValidateDate(command.DOB)
+	if err != nil {
+		return
+	}
+
 	employee = model.Employee{
 		UID:    uuid.NewString(),
 		Name:   command.Name,
-		DOB:    command.DOB,
+		DOB:    date,
 		Gender: ToGenderNum(command.Gender),
 	}
 	err = persistence.Employees().Save(ctx, employee)
@@ -45,4 +52,14 @@ func ToGenderNum(gender string) int {
 		return 2
 	}
 	return genMap[gender]
+}
+
+func ValidateDate(date string) (string, error) {
+	const layoutISO = "2006-01-02"
+	_, err := time.Parse(layoutISO, date)
+	if err != nil {
+		return "", fmt.Errorf("date not in format yyyy-MM-DD")
+	}
+
+	return date, nil
 }

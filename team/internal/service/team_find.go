@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+
 	"github.com/google/uuid"
+
 	"github.com/tiennam886/manager/team/internal/model"
 	"github.com/tiennam886/manager/team/internal/persistence"
 )
@@ -19,5 +21,5 @@ func FindTeamByUID(ctx context.Context, command FindTeamByUIDCommand) (staff mod
 		return
 	}
 
-	return persistence.Team().FindByUID(ctx, string(command))
+	return persistence.Teams().FindByUID(ctx, string(command))
 }
