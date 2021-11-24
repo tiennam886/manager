@@ -19,6 +19,30 @@ type mongoEmployeeRepository struct {
 	collection *mongo.Collection
 }
 
+func (repo *mongoEmployeeRepository) FindAll(ctx context.Context, offset int, limit int) ([]model.EmployeePost, error) {
+	filter := bson.M{}
+
+	findOptions := options.Find()
+	findOptions.SetSkip((int64(offset) - 1) * int64(limit))
+	findOptions.SetLimit(int64(limit))
+
+	cursor, err := repo.collection.Find(ctx, filter, findOptions)
+	if err != nil {
+		return []model.EmployeePost{}, err
+	}
+
+	var employees []model.EmployeePost
+	for cursor.Next(ctx) {
+		var employee model.Employee
+		err = cursor.Decode(&employee)
+		if err != nil {
+			return employees, err
+		}
+		employees = append(employees, employee.ToEmployeePost())
+	}
+	return employees, nil
+}
+
 func newMongoEmployeeRepository() (repo EmployeeRepository, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -43,15 +67,15 @@ func newMongoEmployeeRepository() (repo EmployeeRepository, err error) {
 	return repo, nil
 }
 
-func (repo *mongoEmployeeRepository) FindByUID(ctx context.Context, uid string) (model.Employee, error) {
+func (repo *mongoEmployeeRepository) FindByUID(ctx context.Context, uid string) (model.EmployeePost, error) {
 	result := repo.collection.FindOne(ctx, bson.M{"uid": uid})
 
 	var staff model.Employee
 	if err := result.Decode(&staff); err != nil {
-		return model.Employee{}, err
+		return model.EmployeePost{}, err
 	}
 
-	return staff, nil
+	return staff.ToEmployeePost(), nil
 }
 
 func (repo *mongoEmployeeRepository) Save(ctx context.Context, staff model.Employee) error {

@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+
 	"log"
 	"net"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
+	"github.com/tiennam886/manager/pkg/logger"
 )
 
 func v1(r *chi.Mux) {
@@ -19,6 +22,8 @@ func v1(r *chi.Mux) {
 		r.Route("/employee", func(r chi.Router) {
 			r.Post("/", EmployeeAdd)
 			r.Get("/{uid}", EmployeeFindByUID)
+			r.Get("/", EmployeeGetAll)
+
 			r.Delete("/{uid}", EmployeeDeleteByUID)
 			r.Patch("/{uid}", EmployeeUpdateByUID)
 
@@ -29,8 +34,9 @@ func v1(r *chi.Mux) {
 }
 
 func Serve(ctx context.Context, addr string) (err error) {
+	sugarLogger = logger.ConfigZap()
 	defer func() {
-		log.Println("HTTP server stopped", err)
+		sugarLogger.Errorf("HTTP server stopped" + err.Error())
 	}()
 
 	r := chi.NewRouter()

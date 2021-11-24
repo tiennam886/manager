@@ -62,6 +62,27 @@ func TeamDeleteByUID(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func TeamUpdateByUID(w http.ResponseWriter, r *http.Request) {
+	uid := chi.URLParam(r, "uid")
+
+	var payload service.UpdateTeamCommand
+	if err := httputil.BindJSON(r, &payload); err != nil {
+		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	err := service.UpdateTeamByUid(r.Context(), service.UpdateTeamByUIDCommand(uid), payload)
+	if err != nil {
+		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
+		Message: fmt.Sprintf("Updated team uid=%s", uid),
+		Data:    payload,
+	})
+}
+
 type Command struct {
 	Event string
 	Json  []byte

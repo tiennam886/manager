@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/tiennam886/manager/team/internal/service"
 	"os"
 	"time"
 
@@ -52,6 +53,19 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:        "cli",
+			Usage:       "Cli Mode",
+			Subcommands: teamCli,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "db",
+					Aliases: []string{"d"},
+					Value:   "postgres",
+					Usage:   "set name of database to use",
+				},
+			},
+		},
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer func() {
@@ -66,6 +80,14 @@ func main() {
 }
 
 func Serve(c *cli.Context) error {
+	if err := Load(c); err != nil {
+		return err
+	}
+
+	return httpapi.Serve(c.Context, c.String("addr"))
+}
+
+func Load(c *cli.Context) error {
 	if err := config.LoadEnvFromFile(c.String("env_prefix"), c.String("env")); err != nil {
 		return err
 	}
@@ -73,6 +95,116 @@ func Serve(c *cli.Context) error {
 	if err := persistence.LoadTeamRepository(c.String("db")); err != nil {
 		return err
 	}
+	return nil
+}
 
-	return httpapi.Serve(c.Context, c.String("addr"))
+var teamCli = []*cli.Command{
+	{
+		Name:  "add",
+		Usage: "add a team. 'add -h' for more help",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "description", Value: "", Aliases: []string{"d"}},
+			&cli.StringFlag{Name: "name", Value: "", Aliases: []string{"n"}, Usage: "Input name, ex: 'team A', 'tester B'"},
+		},
+		Action: addTeam,
+	},
+	{
+		Name:  "delete",
+		Usage: "delete a team by ID, 'delete -h' for more help",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "id", Value: ""},
+		},
+		Action: delTeamCmd,
+	},
+	{
+		Name:  "show-all-members",
+		Usage: "show information of a team by id, 'show-all-member -h' for more help",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "id", Value: ""},
+		},
+		Action: showTeamMembersCmd,
+	},
+	{
+		Name:  "change-name",
+		Usage: "change name of a team by their IDs, 'change-name -h' for more help",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "description", Value: "", Aliases: []string{"d"}},
+			&cli.StringFlag{Name: "id", Value: ""},
+			&cli.StringFlag{Name: "name", Value: ""},
+		},
+		Action: updateTeam,
+	},
+}
+
+func addTeam(c *cli.Context) error {
+	if err := Load(c); err != nil {
+		return err
+	}
+	payload := service.AddTeamCommand{
+		Name:        c.String("name"),
+		Description: c.String("description"),
+	}
+
+	team, err := service.AddTeam(c.Context, payload)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Add team with name: %s - %s - successfully with id %s\n", team.Name, team.Description, team.UID)
+	return nil
+}
+
+//func showAllTeam(c *cli.Context) error {
+//	err := api.InitHandler(db)
+//	if err != nil {
+//		return err
+//	}
+//
+//	_, _, err = service.GetAllTeam(page, limit)
+//	if err != nil {
+//		return err
+//	}
+//
+//	fmt.Println("\nAll of Teams were showed")
+//	return nil
+//}
+
+func delTeamCmd(c *cli.Context) error {
+	if err := Load(c); err != nil {
+		return err
+	}
+	err := service.DeleteTeamByUID(c.Context, service.DeleteTeamByUIDCommand(c.String("id")))
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Delete team with ID: %s successfully\n", c.String("id"))
+	return nil
+}
+
+func showTeamMembersCmd(c *cli.Context) error {
+	if err := Load(c); err != nil {
+		return err
+	}
+
+	team, err := service.FindTeamByUID(c.Context, service.FindTeamByUIDCommand(c.String("id")))
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(team)
+	return nil
+}
+
+func updateTeam(c *cli.Context) error {
+	payload := service.UpdateTeamCommand{
+		Name:        c.String("name"),
+		Description: c.String("description"),
+	}
+
+	err := service.UpdateTeamByUid(c.Context, service.UpdateTeamByUIDCommand(c.String("id")), payload)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Updated team uid=%s", c.String("id"))
+	return nil
 }

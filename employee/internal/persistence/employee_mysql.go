@@ -16,6 +16,26 @@ type mysqlEmployeeRepository struct {
 	EmployeeTable string
 }
 
+func (m mysqlEmployeeRepository) FindAll(ctx context.Context, offset int, limit int) ([]model.EmployeePost, error) {
+	qr := fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ? ;", m.EmployeeTable)
+	all, err := m.Database.Query(qr, limit, (offset-1)*limit)
+	if err != nil {
+		return []model.EmployeePost{}, err
+	}
+
+	var employees []model.EmployeePost
+	for all.Next() {
+		var employee model.Employee
+
+		err = all.Scan(&employee.UID, &employee.Name, &employee.Gender, &employee.DOB)
+		if err != nil {
+			return employees, err
+		}
+		employees = append(employees, employee.ToEmployeePost())
+	}
+	return employees, nil
+}
+
 func newMySqlEmployeeRepository() (repo EmployeeRepository, err error) {
 	mySqlDB, err := sql.Open("mysql", config.Get().MysqlUrl)
 	if err != nil {
@@ -29,17 +49,17 @@ func newMySqlEmployeeRepository() (repo EmployeeRepository, err error) {
 	return
 }
 
-func (m mysqlEmployeeRepository) FindByUID(ctx context.Context, uid string) (model.Employee, error) {
+func (m mysqlEmployeeRepository) FindByUID(ctx context.Context, uid string) (model.EmployeePost, error) {
 	var employee model.Employee
 
 	stmt := fmt.Sprintf("Select * from %s where uid = %s", m.EmployeeTable, uid)
 	row, err := m.Database.Query(stmt)
 	if err != nil {
-		return employee, err
+		return employee.ToEmployeePost(), err
 	}
 	row.Next()
 	err = row.Scan(&employee.UID, &employee.Name, &employee.Gender, &employee.DOB)
-	return employee, err
+	return employee.ToEmployeePost(), err
 }
 
 func (m mysqlEmployeeRepository) Save(ctx context.Context, employee model.Employee) error {

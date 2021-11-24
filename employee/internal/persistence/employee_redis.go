@@ -16,6 +16,10 @@ type redisEmployeeRepository struct {
 	redisCache *redis.Client
 }
 
+func (repo redisEmployeeRepository) FindAll(ctx context.Context, offset int, limit int) ([]model.EmployeePost, error) {
+	return []model.EmployeePost{}, fmt.Errorf("no get all from redis")
+}
+
 func newRedisEmployeeRepository() (repo EmployeeRepository, err error) {
 	redisCache := redis.NewClient(&redis.Options{
 		Addr:     config.Get().RedisUrl,
@@ -29,15 +33,15 @@ func newRedisEmployeeRepository() (repo EmployeeRepository, err error) {
 	return
 }
 
-func (repo redisEmployeeRepository) FindByUID(ctx context.Context, uid string) (model.Employee, error) {
+func (repo redisEmployeeRepository) FindByUID(ctx context.Context, uid string) (model.EmployeePost, error) {
 	var employee model.Employee
 
 	val, err := repo.redisCache.Get(uid).Result()
 	if err != nil {
-		return employee, err
+		return employee.ToEmployeePost(), err
 	}
 	err = json.Unmarshal([]byte(val), &employee)
-	return employee, err
+	return employee.ToEmployeePost(), err
 }
 
 func (repo redisEmployeeRepository) Save(ctx context.Context, employee model.Employee) error {

@@ -3,13 +3,17 @@ package httpapi
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 
 	"github.com/tiennam886/manager/employee/internal/service"
 	"github.com/tiennam886/manager/pkg/httputil"
 	"github.com/tiennam886/manager/pkg/messaging/httpsub"
 )
+
+var sugarLogger *zap.SugaredLogger
 
 func EmployeeAdd(w http.ResponseWriter, r *http.Request) {
 	var payload service.AddEmployeeCommand
@@ -28,6 +32,29 @@ func EmployeeAdd(w http.ResponseWriter, r *http.Request) {
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
 		Message: fmt.Sprintf("Added staff uid=%s", employee.UID),
 		Data:    employee,
+	})
+}
+
+func EmployeeGetAll(w http.ResponseWriter, r *http.Request) {
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 20
+	}
+
+	employees, err := service.GetAllEmployee(r.Context(), page, limit)
+	if err != nil {
+		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
+		Message: fmt.Sprintf("All Employees"),
+		Data:    employees,
 	})
 }
 

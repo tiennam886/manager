@@ -14,7 +14,8 @@ var (
 )
 
 type EmployeeRepository interface {
-	FindByUID(ctx context.Context, uid string) (model.Employee, error)
+	FindAll(ctx context.Context, offset int, limit int) ([]model.EmployeePost, error)
+	FindByUID(ctx context.Context, uid string) (model.EmployeePost, error)
 	Save(ctx context.Context, employee model.Employee) error
 	Update(ctx context.Context, uid string, employee model.Employee) error
 	Remove(ctx context.Context, uid string) error
@@ -25,7 +26,12 @@ type EmployeeRepo struct {
 	EmployeeCache EmployeeRepository
 }
 
-func (e EmployeeRepo) FindByUID(ctx context.Context, uid string) (model.Employee, error) {
+func (e EmployeeRepo) FindAll(ctx context.Context, offset int, limit int) ([]model.EmployeePost, error) {
+	data, err := e.EmployeeDB.FindAll(ctx, offset, limit)
+	return data, err
+}
+
+func (e EmployeeRepo) FindByUID(ctx context.Context, uid string) (model.EmployeePost, error) {
 	data, err := e.EmployeeCache.FindByUID(ctx, uid)
 
 	if err == nil {
@@ -34,7 +40,7 @@ func (e EmployeeRepo) FindByUID(ctx context.Context, uid string) (model.Employee
 
 	data, err = e.EmployeeDB.FindByUID(ctx, uid)
 
-	return data, e.EmployeeCache.Save(ctx, data)
+	return data, e.EmployeeCache.Save(ctx, data.ToEmployeeDoc())
 }
 
 func (e EmployeeRepo) Save(ctx context.Context, employee model.Employee) error {

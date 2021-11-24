@@ -19,6 +19,7 @@ func v1(r *chi.Mux) {
 		r.Route("/team", func(r chi.Router) {
 			r.Post("/", TeamAdd)
 			r.Get("/{uid}", TeamFindByUID)
+			r.Patch("/{uid}", TeamUpdateByUID)
 			r.Delete("/{uid}", TeamDeleteByUID)
 
 			r.Get("/notice", TeamNotice)

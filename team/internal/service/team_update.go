@@ -12,12 +12,17 @@ import (
 
 type UpdateTeamByUIDCommand string
 
+type UpdateTeamCommand struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 func (c UpdateTeamByUIDCommand) Valid() error {
 	_, err := uuid.Parse(string(c))
 	return err
 }
 
-func UpdateTeamByUid(ctx context.Context, command UpdateTeamByUIDCommand, data model.Team) (err error) {
+func UpdateTeamByUid(ctx context.Context, command UpdateTeamByUIDCommand, data UpdateTeamCommand) (err error) {
 	if err = command.Valid(); err != nil {
 		return err
 	}
@@ -25,6 +30,11 @@ func UpdateTeamByUid(ctx context.Context, command UpdateTeamByUIDCommand, data m
 	if _, err = govalidator.ValidateStruct(data); err != nil {
 		return err
 	}
+	newTeam := model.Team{
+		UID:         string(command),
+		Name:        data.Name,
+		Description: data.Description,
+	}
 
-	return persistence.Teams().Update(ctx, string(command), data)
+	return persistence.Teams().Update(ctx, string(command), newTeam)
 }

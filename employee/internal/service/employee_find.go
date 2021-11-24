@@ -16,7 +16,7 @@ func (c FindEmployeeByUIDCommand) Valid() error {
 	return err
 }
 
-func FindStaffByUID(ctx context.Context, command FindEmployeeByUIDCommand) (staff model.Employee, err error) {
+func FindStaffByUID(ctx context.Context, command FindEmployeeByUIDCommand) (staff model.EmployeePost, err error) {
 	if err = command.Valid(); err != nil {
 		return
 	}
