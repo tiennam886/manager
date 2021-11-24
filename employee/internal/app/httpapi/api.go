@@ -2,8 +2,6 @@ package httpapi
 
 import (
 	"context"
-
-	"log"
 	"net"
 	"net/http"
 	"time"
@@ -63,8 +61,7 @@ func Serve(ctx context.Context, addr string) (err error) {
 			errChan <- err
 		}
 	}(ctx, errChan)
-
-	log.Printf("HTTP server started at %s\n", addr)
+	sugarLogger.Errorf("HTTP server started at %s\n", addr)
 
 	select {
 	case <-ctx.Done():

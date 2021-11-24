@@ -16,6 +16,7 @@ import (
 var sugarLogger *zap.SugaredLogger
 
 func EmployeeAdd(w http.ResponseWriter, r *http.Request) {
+	sugarLogger.Infow("POST /employee")
 	var payload service.AddEmployeeCommand
 
 	if err := httputil.BindJSON(r, &payload); err != nil {
@@ -36,6 +37,7 @@ func EmployeeAdd(w http.ResponseWriter, r *http.Request) {
 }
 
 func EmployeeGetAll(w http.ResponseWriter, r *http.Request) {
+	sugarLogger.Infow("GET /employee")
 	page, err := strconv.Atoi(r.URL.Query().Get("page"))
 	if err != nil {
 		page = 1
@@ -48,10 +50,12 @@ func EmployeeGetAll(w http.ResponseWriter, r *http.Request) {
 
 	employees, err := service.GetAllEmployee(r.Context(), page, limit)
 	if err != nil {
+		sugarLogger.Errorf(err.Error())
 		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
+	sugarLogger.Infow("Get All Employees Successfully")
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
 		Message: fmt.Sprintf("All Employees"),
 		Data:    employees,
@@ -60,13 +64,16 @@ func EmployeeGetAll(w http.ResponseWriter, r *http.Request) {
 
 func EmployeeFindByUID(w http.ResponseWriter, r *http.Request) {
 	uid := chi.URLParam(r, "uid")
+	sugarLogger.Infow(fmt.Sprintf("GET /employee/%s", uid))
 
 	employee, err := service.FindStaffByUID(r.Context(), service.FindEmployeeByUIDCommand(uid))
 	if err != nil {
+		sugarLogger.Errorf(err.Error())
 		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
+	sugarLogger.Infow(fmt.Sprintf("Found staff uid= %s", uid))
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
 		Message: fmt.Sprintf("Found staff uid=%s", uid),
 		Data:    employee,
@@ -75,13 +82,16 @@ func EmployeeFindByUID(w http.ResponseWriter, r *http.Request) {
 
 func EmployeeDeleteByUID(w http.ResponseWriter, r *http.Request) {
 	uid := chi.URLParam(r, "uid")
+	sugarLogger.Infow(fmt.Sprintf("DELETE /employee/%s", uid))
 
 	err := service.DeleteEmployeeByUID(r.Context(), service.DeleteEmployeeByUIDCommand(uid))
 	if err != nil {
+		sugarLogger.Errorf(err.Error())
 		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
+	sugarLogger.Infow(fmt.Sprintf("Employee with ID %s was deleted\n", uid))
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
 		Message: fmt.Sprintf("Deleted staff uid=%s", uid),
 	})
@@ -89,19 +99,23 @@ func EmployeeDeleteByUID(w http.ResponseWriter, r *http.Request) {
 
 func EmployeeUpdateByUID(w http.ResponseWriter, r *http.Request) {
 	uid := chi.URLParam(r, "uid")
+	sugarLogger.Infow(fmt.Sprintf("UPDATE /employee/%s", uid))
 
 	var payload service.UpdateEmployeeCommand
 	if err := httputil.BindJSON(r, &payload); err != nil {
+		sugarLogger.Errorf(err.Error())
 		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
 	err := service.UpdateEmployeeByUid(r.Context(), service.UpdateEmployeeByUIDCommand(uid), payload)
 	if err != nil {
+		sugarLogger.Errorf(err.Error())
 		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
+	sugarLogger.Infow(fmt.Sprintf("Updated staff uid=%s", uid))
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
 		Message: fmt.Sprintf("Updated staff uid=%s", uid),
 		Data:    payload,
