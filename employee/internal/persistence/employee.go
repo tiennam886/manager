@@ -19,11 +19,33 @@ type EmployeeRepository interface {
 	Save(ctx context.Context, employee model.Employee) error
 	Update(ctx context.Context, uid string, employee model.Employee) error
 	Remove(ctx context.Context, uid string) error
+
+	AddToTeam(ctx context.Context, employeeId string, teamId string) error
+	FindByEmployeeId(ctx context.Context, employeeId string) ([]string, error)
+	DeleteByEmployeeId(ctx context.Context, employeeId string) error
+	DeleteFromTeam(ctx context.Context, employeeId string, teamId string) error
 }
 
 type EmployeeRepo struct {
 	EmployeeDB    EmployeeRepository
 	EmployeeCache EmployeeRepository
+}
+
+func (e EmployeeRepo) DeleteFromTeam(ctx context.Context, employeeId string, teamId string) error {
+	return e.EmployeeDB.DeleteFromTeam(ctx, employeeId, teamId)
+}
+
+func (e EmployeeRepo) AddToTeam(ctx context.Context, employeeId string, teamId string) error {
+	return e.EmployeeDB.AddToTeam(ctx, employeeId, teamId)
+}
+
+func (e EmployeeRepo) FindByEmployeeId(ctx context.Context, employeeId string) ([]string, error) {
+	data, err := e.EmployeeDB.FindByEmployeeId(ctx, employeeId)
+	return data, err
+}
+
+func (e EmployeeRepo) DeleteByEmployeeId(ctx context.Context, employeeId string) error {
+	return e.EmployeeDB.DeleteByEmployeeId(ctx, employeeId)
 }
 
 func (e EmployeeRepo) FindAll(ctx context.Context, offset int, limit int) ([]model.EmployeePost, error) {
@@ -62,6 +84,10 @@ func (e EmployeeRepo) Remove(ctx context.Context, uid string) error {
 		return err
 	}
 
+	err = e.EmployeeDB.DeleteByEmployeeId(ctx, uid)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	return e.EmployeeCache.Remove(ctx, uid)
 }
 

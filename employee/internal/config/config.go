@@ -11,13 +11,14 @@ type Config struct {
 	LogLevel int
 	LogFile  string
 
-	MongoDbUrl    string
-	Database      string
-	Collection    string
-	RedisUrl      string
-	MysqlUrl      string
-	EmployeeTable string
-	PostgresqlUrl string
+	MongoDbUrl      string
+	Database        string
+	Collection      string
+	RedisUrl        string
+	MysqlUrl        string
+	EmployeeTable   string
+	TeamMemberTable string
+	PostgresqlUrl   string
 }
 
 func Get() Config {

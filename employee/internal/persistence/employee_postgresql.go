@@ -12,8 +12,9 @@ import (
 )
 
 type postgresqlEmployeeRepository struct {
-	Database      *sql.DB
-	EmployeeTable string
+	Database        *sql.DB
+	EmployeeTable   string
+	TeamMemberTable string
 }
 
 func newPostgresqlEmployeeRepository() (repo EmployeeRepository, err error) {
@@ -23,8 +24,9 @@ func newPostgresqlEmployeeRepository() (repo EmployeeRepository, err error) {
 	}
 
 	repo = &postgresqlEmployeeRepository{
-		Database:      postgresqlDB,
-		EmployeeTable: config.Get().EmployeeTable,
+		Database:        postgresqlDB,
+		EmployeeTable:   config.Get().EmployeeTable,
+		TeamMemberTable: config.Get().TeamMemberTable,
 	}
 	return
 }
@@ -77,4 +79,20 @@ func (m postgresqlEmployeeRepository) Remove(ctx context.Context, uid string) er
 	stmt := fmt.Sprintf("delete from %s where uid=$1", m.EmployeeTable)
 	_, err := m.Database.Exec(stmt, uid)
 	return err
+}
+
+func (m postgresqlEmployeeRepository) AddToTeam(ctx context.Context, employeeId string, teamId string) error {
+	panic("implement me")
+}
+
+func (m postgresqlEmployeeRepository) DeleteFromTeam(ctx context.Context, employeeId string, teamId string) error {
+	panic("implement me")
+}
+
+func (m postgresqlEmployeeRepository) FindByEmployeeId(ctx context.Context, employeeId string) ([]string, error) {
+	panic("implement me")
+}
+
+func (m postgresqlEmployeeRepository) DeleteByEmployeeId(ctx context.Context, employeeId string) error {
+	panic("implement me")
 }

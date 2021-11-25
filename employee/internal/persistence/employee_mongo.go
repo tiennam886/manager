@@ -17,6 +17,7 @@ import (
 type mongoEmployeeRepository struct {
 	client     *mongo.Client
 	collection *mongo.Collection
+	members    *mongo.Collection
 }
 
 func (repo *mongoEmployeeRepository) FindAll(ctx context.Context, offset int, limit int) ([]model.EmployeePost, error) {
@@ -63,6 +64,7 @@ func newMongoEmployeeRepository() (repo EmployeeRepository, err error) {
 	repo = &mongoEmployeeRepository{
 		client:     client,
 		collection: client.Database(config.Get().Database).Collection(config.Get().Collection),
+		members:    client.Database(config.Get().Database).Collection(config.Get().TeamMemberTable),
 	}
 	return repo, nil
 }
@@ -93,12 +95,55 @@ func (repo *mongoEmployeeRepository) Remove(ctx context.Context, uid string) err
 	return err
 }
 
+func (repo *mongoEmployeeRepository) AddToTeam(ctx context.Context, employeeId string, teamId string) error {
+	_, err := repo.members.InsertOne(ctx, bson.D{
+		{"employee_id", employeeId},
+		{"team_id", teamId},
+	})
+	return err
+}
+
+func (repo *mongoEmployeeRepository) DeleteFromTeam(ctx context.Context, employeeId string, teamId string) error {
+	_, err := repo.members.DeleteOne(ctx, bson.M{"employee_id": employeeId, "team_id": teamId})
+	return err
+}
+
+func (repo *mongoEmployeeRepository) FindByEmployeeId(ctx context.Context, employeeId string) ([]string, error) {
+	cursor, err := repo.members.Find(ctx, bson.M{"employee_id": employeeId})
+	if err != nil {
+		return nil, err
+	}
+
+	var teamList []string
+	for cursor.Next(ctx) {
+		var member Member
+		err = cursor.Decode(&member)
+		if err != nil {
+			return teamList, err
+		}
+
+		teamList = append(teamList, member.TeamId)
+	}
+	return teamList, nil
+}
+
+func (repo *mongoEmployeeRepository) DeleteByEmployeeId(ctx context.Context, employeeId string) error {
+	_, err := repo.members.DeleteMany(ctx, bson.M{"employee_id": employeeId})
+	return err
+}
+
 type EmployeeDocument struct {
 	ID     primitive.ObjectID `bson:"_id"`
 	UID    string             `bson:"uid"`
 	Name   string             `bson:"name"`
 	DOB    string             `bson:"dob"`
 	Gender int                `bson:"gender"`
+}
+
+type Member struct {
+	ID         primitive.ObjectID `bson:"_id"`
+	EmployeeId string             `bson:"employee_id"`
+	TeamId     string             `bson:"team_id"`
 }
 
 func toStaffDocument(s model.Employee) EmployeeDocument {

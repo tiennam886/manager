@@ -126,8 +126,8 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/tidwall/pretty v1.0.0 h1:HsD+QiTn7sK6flMKIvNmpqz1qrpP3Ps6jOKIKMooyg4=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
-github.com/tiennam886/manager/pkg v0.0.0-20211116023318-d4810a60dcd8 h1:NyYocZEXdatgvILYXJdEge7L9X+WmkCQt+M+gL3eAm0=
-github.com/tiennam886/manager/pkg v0.0.0-20211116023318-d4810a60dcd8/go.mod h1:3m6swKfiewq+3uq7NJ16sarM+0HnhgeFENGdvUpLa7w=
+github.com/tiennam886/manager/pkg v0.0.0-20211124044808-c1822b210ee8 h1:zdgiDtb65zTcr6TzmYOgazHVlrS1B7AAAE73gPkoELs=
+github.com/tiennam886/manager/pkg v0.0.0-20211124044808-c1822b210ee8/go.mod h1:ZfeUmlsRTNHw4lp4HlZWdC54A6IhB6FgKdUqIQ8J+YQ=
 github.com/urfave/cli/v2 v2.3.0 h1:qph92Y649prgesehzOrQjdWyxFOp/QVM+6imKHad91M=
 github.com/urfave/cli/v2 v2.3.0/go.mod h1:LJmUH05zAU44vOAcrfzZQKsZbVcdbOG8rtL3/XcUArI=
 github.com/xdg-go/pbkdf2 v1.0.0 h1:Su7DPu48wXMwC3bs7MCNG+z4FhcyEuz5dlvchbq0B0c=

@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"github.com/tiennam886/manager/employee/internal/config"
 	"net"
 	"net/http"
 	"time"
@@ -32,7 +33,7 @@ func v1(r *chi.Mux) {
 }
 
 func Serve(ctx context.Context, addr string) (err error) {
-	sugarLogger = logger.ConfigZap()
+	sugarLogger = logger.ConfigZap(config.Get().LogLevel)
 	defer func() {
 		sugarLogger.Errorf("HTTP server stopped" + err.Error())
 	}()

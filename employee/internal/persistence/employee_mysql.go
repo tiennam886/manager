@@ -12,8 +12,25 @@ import (
 )
 
 type mysqlEmployeeRepository struct {
-	Database      *sql.DB
-	EmployeeTable string
+	Database        *sql.DB
+	EmployeeTable   string
+	TeamMemberTable string
+}
+
+func (m mysqlEmployeeRepository) DeleteFromTeam(ctx context.Context, employeeId string, teamId string) error {
+	panic("implement me")
+}
+
+func (m mysqlEmployeeRepository) AddToTeam(ctx context.Context, employeeId string, teamId string) error {
+	panic("implement me")
+}
+
+func (m mysqlEmployeeRepository) FindByEmployeeId(ctx context.Context, employeeId string) ([]string, error) {
+	panic("implement me")
+}
+
+func (m mysqlEmployeeRepository) DeleteByEmployeeId(ctx context.Context, employeeId string) error {
+	panic("implement me")
 }
 
 func (m mysqlEmployeeRepository) FindAll(ctx context.Context, offset int, limit int) ([]model.EmployeePost, error) {
@@ -43,8 +60,9 @@ func newMySqlEmployeeRepository() (repo EmployeeRepository, err error) {
 	}
 
 	repo = &mysqlEmployeeRepository{
-		Database:      mySqlDB,
-		EmployeeTable: config.Get().EmployeeTable,
+		Database:        mySqlDB,
+		EmployeeTable:   config.Get().EmployeeTable,
+		TeamMemberTable: config.Get().TeamMemberTable,
 	}
 	return
 }

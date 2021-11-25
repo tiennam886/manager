@@ -11,7 +11,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lib/pq v1.10.4
-	github.com/tiennam886/manager/pkg v0.0.0-20211116023318-d4810a60dcd8
+	github.com/tiennam886/manager/pkg v0.0.0-20211124044808-c1822b210ee8
 	github.com/urfave/cli/v2 v2.3.0
 	go.mongodb.org/mongo-driver v1.7.4
 	go.uber.org/zap v1.19.1
