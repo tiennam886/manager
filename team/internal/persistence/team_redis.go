@@ -16,6 +16,26 @@ type redisEmployeeRepository struct {
 	redisCache *redis.Client
 }
 
+func (repo redisEmployeeRepository) FindAll(ctx context.Context, offset int, limit int) ([]model.Team, error) {
+	panic("implement me")
+}
+
+func (repo redisEmployeeRepository) AddAnEmployee(ctx context.Context, employeeId string, teamId string) error {
+	panic("implement me")
+}
+
+func (repo redisEmployeeRepository) FindByTeamId(ctx context.Context, teamId string) ([]string, error) {
+	panic("implement me")
+}
+
+func (repo redisEmployeeRepository) DeleteByTeamId(ctx context.Context, teamId string) error {
+	panic("implement me")
+}
+
+func (repo redisEmployeeRepository) DeleteAnEmployee(ctx context.Context, employeeId string, teamId string) error {
+	panic("implement me")
+}
+
 func newRedisTeamRepository() (repo TeamRepository, err error) {
 	redisCache := redis.NewClient(&redis.Options{
 		Addr:     config.Get().RedisUrl,

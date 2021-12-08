@@ -48,7 +48,7 @@ func main() {
 				&cli.StringFlag{
 					Name:    "db",
 					Aliases: []string{"d"},
-					Value:   "postgres",
+					Value:   "mongo",
 					Usage:   "set name of database to use",
 				},
 			},

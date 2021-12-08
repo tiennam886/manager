@@ -11,6 +11,7 @@ import (
 )
 
 type UpdateEmployeeByUIDCommand string
+
 type UpdateEmployeeCommand struct {
 	Name   string `json:"name"`
 	DOB    string `json:"dob"`

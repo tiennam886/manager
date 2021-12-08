@@ -17,6 +17,68 @@ import (
 type mongoTeamRepository struct {
 	client     *mongo.Client
 	collection *mongo.Collection
+	members    *mongo.Collection
+}
+
+func (repo *mongoTeamRepository) FindAll(ctx context.Context, offset int, limit int) ([]model.Team, error) {
+	filter := bson.M{}
+
+	findOptions := options.Find()
+	findOptions.SetSkip((int64(offset) - 1) * int64(limit))
+	findOptions.SetLimit(int64(limit))
+
+	cursor, err := repo.collection.Find(ctx, filter, findOptions)
+	if err != nil {
+		return []model.Team{}, err
+	}
+
+	var teams []model.Team
+	for cursor.Next(ctx) {
+		var team model.Team
+		err = cursor.Decode(&team)
+		if err != nil {
+			return teams, err
+		}
+		teams = append(teams, team)
+	}
+	return teams, nil
+}
+
+func (repo *mongoTeamRepository) AddAnEmployee(ctx context.Context, employeeId string, teamId string) error {
+	_, err := repo.members.InsertOne(ctx, bson.D{
+		{"employee_id", employeeId},
+		{"team_id", teamId},
+	})
+	return err
+}
+
+func (repo *mongoTeamRepository) FindByTeamId(ctx context.Context, teamId string) ([]string, error) {
+	cursor, err := repo.members.Find(ctx, bson.M{"team_id": teamId})
+	if err != nil {
+		return nil, err
+	}
+
+	var employeeList []string
+	for cursor.Next(ctx) {
+		var member Member
+		err = cursor.Decode(&member)
+		if err != nil {
+			return employeeList, err
+		}
+
+		employeeList = append(employeeList, member.EmployeeId)
+	}
+	return employeeList, nil
+}
+
+func (repo *mongoTeamRepository) DeleteByTeamId(ctx context.Context, teamId string) error {
+	_, err := repo.members.DeleteMany(ctx, bson.M{"team_id": teamId})
+	return err
+}
+
+func (repo *mongoTeamRepository) DeleteAnEmployee(ctx context.Context, employeeId string, teamId string) error {
+	_, err := repo.members.DeleteOne(ctx, bson.M{"employee_id": employeeId, "team_id": teamId})
+	return err
 }
 
 func newMongoTeamRepository() (repo TeamRepository, err error) {
@@ -39,6 +101,7 @@ func newMongoTeamRepository() (repo TeamRepository, err error) {
 	repo = &mongoTeamRepository{
 		client:     client,
 		collection: client.Database(config.Get().Database).Collection(config.Get().Collection),
+		members:    client.Database(config.Get().Database).Collection(config.Get().TeamMemberTable),
 	}
 	return repo, nil
 }
@@ -50,7 +113,6 @@ func (repo *mongoTeamRepository) FindByUID(ctx context.Context, uid string) (mod
 	if err := result.Decode(&team); err != nil {
 		return model.Team{}, err
 	}
-
 	return team, nil
 }
 
@@ -60,8 +122,8 @@ func (repo *mongoTeamRepository) Save(ctx context.Context, team model.Team) erro
 }
 
 func (repo *mongoTeamRepository) Update(ctx context.Context, uid string, team model.Team) error {
-	_, err := repo.collection.UpdateOne(ctx, bson.M{"uid": uid}, toTeamDocument(team))
-	return err
+	err := repo.collection.FindOneAndReplace(ctx, bson.M{"uid": uid}, team)
+	return err.Err()
 }
 
 func (repo *mongoTeamRepository) Remove(ctx context.Context, uid string) error {
@@ -91,4 +153,10 @@ func (s TeamDocument) ToModel() model.Team {
 		Name:        s.Name,
 		Description: s.Description,
 	}
+}
+
+type Member struct {
+	ID         primitive.ObjectID `bson:"_id"`
+	EmployeeId string             `bson:"employee_id"`
+	TeamId     string             `bson:"team_id"`
 }

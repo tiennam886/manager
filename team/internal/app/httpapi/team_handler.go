@@ -2,8 +2,10 @@ package httpapi
 
 import (
 	"fmt"
+	"go.uber.org/zap"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 
@@ -13,8 +15,46 @@ import (
 	"github.com/tiennam886/manager/team/internal/service"
 )
 
+var sugarLogger *zap.SugaredLogger
+
+func TeamGetAll(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	sugarLogger.Infow("GET /team")
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 20
+	}
+
+	teams, err := service.GetAllTeam(r.Context(), page, limit)
+	if err != nil {
+		sugarLogger.Errorf(err.Error())
+		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	sugarLogger.Infow("Get All Teams Successfully")
+	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
+		Message: "All Employees",
+		Data:    teams,
+	})
+}
+
 func TeamAdd(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	var payload service.AddTeamCommand
+
+	sugarLogger.Infow("POST /team")
 
 	if err := httputil.BindJSON(r, &payload); err != nil {
 		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
@@ -28,13 +68,19 @@ func TeamAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
-		Message: fmt.Sprintf("Added staff uid=%s", employee.UID),
+		Message: fmt.Sprintf("Added team uid=%s", employee.UID),
 		Data:    employee,
 	})
 }
 
 func TeamFindByUID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	uid := chi.URLParam(r, "uid")
+
+	sugarLogger.Infow(fmt.Sprintf("GET /team/%s", uid))
 
 	staff, err := service.FindTeamByUID(r.Context(), service.FindTeamByUIDCommand(uid))
 	if err != nil {
@@ -42,6 +88,7 @@ func TeamFindByUID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sugarLogger.Infow(fmt.Sprintf("Found team uid= %s", uid))
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
 		Message: fmt.Sprintf("Found staff uid=%s", uid),
 		Data:    staff,
@@ -49,7 +96,13 @@ func TeamFindByUID(w http.ResponseWriter, r *http.Request) {
 }
 
 func TeamDeleteByUID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	uid := chi.URLParam(r, "uid")
+
+	sugarLogger.Infow(fmt.Sprintf("DELETE /team/%s", uid))
 
 	err := service.DeleteTeamByUID(r.Context(), service.DeleteTeamByUIDCommand(uid))
 	if err != nil {
@@ -57,13 +110,19 @@ func TeamDeleteByUID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sugarLogger.Infow(fmt.Sprintf("Team with ID %s was deleted\n", uid))
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
-		Message: fmt.Sprintf("Deleted staff uid=%s", uid),
+		Message: fmt.Sprintf("Deleted team uid=%s", uid),
 	})
 }
 
 func TeamUpdateByUID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	uid := chi.URLParam(r, "uid")
+	sugarLogger.Infow(fmt.Sprintf("UPDATE /team/%s", uid))
 
 	var payload service.UpdateTeamCommand
 	if err := httputil.BindJSON(r, &payload); err != nil {
@@ -77,6 +136,7 @@ func TeamUpdateByUID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sugarLogger.Infow(fmt.Sprintf("Updated team uid=%s", uid))
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
 		Message: fmt.Sprintf("Updated team uid=%s", uid),
 		Data:    payload,
@@ -116,5 +176,16 @@ func TeamNotice(w http.ResponseWriter, r *http.Request) {
 	httppub.Publish(event)
 	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
 		Data: event,
+	})
+}
+
+func TeamOption(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
+		Message: "",
+		Data:    nil,
 	})
 }

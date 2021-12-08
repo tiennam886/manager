@@ -8,16 +8,15 @@ import (
 var config Config
 
 type Config struct {
-	LogLevel int
-	LogFile  string
-
-	MongoDbUrl    string
-	Database      string
-	Collection    string
-	RedisUrl      string
-	MysqlUrl      string
-	TeamTable     string
-	PostgresqlUrl string
+	LogLevel        int
+	MongoDbUrl      string
+	Database        string
+	Collection      string
+	RedisUrl        string
+	MysqlUrl        string
+	TeamTable       string
+	TeamMemberTable string
+	PostgresqlUrl   string
 }
 
 func Get() Config {

@@ -11,5 +11,5 @@ func DeleteEmployeeToTeam(ctx context.Context, command EmployeeToTeamCommand) er
 		return err
 	}
 
-	return persistence.Employees().DeleteFromTeam(ctx, command.employeeId, command.teamId)
+	return persistence.Employees().DeleteFromTeam(ctx, command.EmployeeId, command.TeamId)
 }

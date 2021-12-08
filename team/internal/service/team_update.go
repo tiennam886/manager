@@ -35,6 +35,6 @@ func UpdateTeamByUid(ctx context.Context, command UpdateTeamByUIDCommand, data U
 		Name:        data.Name,
 		Description: data.Description,
 	}
-
-	return persistence.Teams().Update(ctx, string(command), newTeam)
+	err = persistence.Teams().Update(ctx, string(command), newTeam)
+	return
 }

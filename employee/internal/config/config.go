@@ -8,9 +8,8 @@ import (
 var config Config
 
 type Config struct {
-	LogLevel int
-	LogFile  string
-
+	LogLevel        int
+	LogFile         string
 	MongoDbUrl      string
 	Database        string
 	Collection      string

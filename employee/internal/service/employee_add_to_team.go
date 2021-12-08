@@ -9,17 +9,17 @@ import (
 )
 
 type EmployeeToTeamCommand struct {
-	employeeId string `json:"employee_id"`
-	teamId     string `json:"team_id"`
+	EmployeeId string `json:"employee_id"`
+	TeamId     string `json:"team_id"`
 }
 
 func (a EmployeeToTeamCommand) Valid() error {
-	_, err := uuid.Parse(a.employeeId)
+	_, err := uuid.Parse(a.EmployeeId)
 	if err != nil {
 		return err
 	}
 
-	_, err = uuid.Parse(a.teamId)
+	_, err = uuid.Parse(a.TeamId)
 	return err
 }
 
@@ -28,5 +28,5 @@ func AddEmployeeToTeam(ctx context.Context, command EmployeeToTeamCommand) error
 		return err
 	}
 
-	return persistence.Employees().AddToTeam(ctx, command.employeeId, command.teamId)
+	return persistence.Employees().AddToTeam(ctx, command.EmployeeId, command.TeamId)
 }

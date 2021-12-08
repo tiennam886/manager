@@ -42,13 +42,13 @@ func main() {
 				&cli.StringFlag{
 					Name:    "addr",
 					Aliases: []string{"address"},
-					Value:   "localhost:8080",
+					Value:   "localhost:8082",
 					Usage:   "specify which address to serve on",
 				},
 				&cli.StringFlag{
 					Name:    "db",
 					Aliases: []string{"d"},
-					Value:   "postgres",
+					Value:   "mongo",
 					Usage:   "set name of database to use",
 				},
 			},
@@ -142,7 +142,7 @@ func addEmployeeCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("Insert employer name: %s, gender: %s, DoB: %s successfully with id %s\n", employee.Name, employee.ToGenderStr(), employee.DOB, employee.UID)
+	fmt.Printf("Insert employer name: %s, gender: %s, DoB: %s successfully with id %s\n", employee.Name, employee.Gender, employee.DOB, employee.UID)
 	return nil
 }
 

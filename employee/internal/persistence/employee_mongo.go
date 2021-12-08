@@ -86,8 +86,8 @@ func (repo *mongoEmployeeRepository) Save(ctx context.Context, staff model.Emplo
 }
 
 func (repo *mongoEmployeeRepository) Update(ctx context.Context, uid string, staff model.Employee) error {
-	_, err := repo.collection.UpdateOne(ctx, bson.M{"uid": uid}, toStaffDocument(staff))
-	return err
+	err := repo.collection.FindOneAndReplace(ctx, bson.M{"uid": uid}, staff)
+	return err.Err()
 }
 
 func (repo *mongoEmployeeRepository) Remove(ctx context.Context, uid string) error {

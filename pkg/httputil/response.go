@@ -19,6 +19,9 @@ func WriteJsonOK(w http.ResponseWriter, body ResponseBody) error {
 func WriteJSON(w http.ResponseWriter, code int, body ResponseBody) error {
 	w.WriteHeader(code)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
 	jsonBytes, err := json.Marshal(body)
 	if err != nil {

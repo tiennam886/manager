@@ -2,6 +2,9 @@ package httpapi
 
 import (
 	"context"
+	"fmt"
+	"github.com/tiennam886/manager/pkg/logger"
+	"github.com/tiennam886/manager/team/internal/config"
 	"log"
 	"net"
 	"net/http"
@@ -15,12 +18,27 @@ func v1(r *chi.Mux) {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(middleware.Timeout(30 * time.Second))
 		r.Use(middleware.Recoverer)
+		r.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+				w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+				w.Header().Set("Access-Control-Allow-Headers", "*")
 
+				next.ServeHTTP(w, r)
+			})
+
+		})
 		r.Route("/team", func(r chi.Router) {
 			r.Post("/", TeamAdd)
 			r.Get("/{uid}", TeamFindByUID)
+			r.Get("/", TeamGetAll)
+
 			r.Patch("/{uid}", TeamUpdateByUID)
 			r.Delete("/{uid}", TeamDeleteByUID)
+
+			r.Options("/", TeamOption)
+			r.Options("/{param}", TeamOption)
 
 			r.Get("/notice", TeamNotice)
 		})
@@ -28,6 +46,7 @@ func v1(r *chi.Mux) {
 }
 
 func Serve(ctx context.Context, addr string) (err error) {
+	sugarLogger = logger.ConfigZap(config.Get().LogLevel)
 	defer func() {
 		log.Println("HTTP server stopped", err)
 	}()
@@ -58,6 +77,7 @@ func Serve(ctx context.Context, addr string) (err error) {
 	}(ctx, errChan)
 
 	log.Printf("HTTP server started at %s\n", addr)
+	sugarLogger.Infow(fmt.Sprintf("HTTP server started at %s", addr))
 
 	select {
 	case <-ctx.Done():

@@ -15,13 +15,13 @@ func ConfigZap(level int) *zap.SugaredLogger {
 		OutputPaths: []string{"stderr"},
 
 		EncoderConfig: zapcore.EncoderConfig{
-			MessageKey:   "message",
-			TimeKey:      "time",
-			LevelKey:     "level",
-			CallerKey:    "caller",
-			EncodeCaller: zapcore.FullCallerEncoder,
-			EncodeLevel:  CustomLevelEncoder,
-			EncodeTime:   SyslogTimeEncoder,
+			MessageKey: "message",
+			TimeKey:    "time",
+			LevelKey:   "level",
+			// CallerKey:    "caller",
+			// EncodeCaller: zapcore.FullCallerEncoder,
+			EncodeLevel: CustomLevelEncoder,
+			EncodeTime:  SyslogTimeEncoder,
 		},
 	}
 

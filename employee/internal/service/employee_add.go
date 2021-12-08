@@ -23,7 +23,7 @@ func (c AddEmployeeCommand) Valid() error {
 	return err
 }
 
-func AddEmployee(ctx context.Context, command AddEmployeeCommand) (employee model.Employee, err error) {
+func AddEmployee(ctx context.Context, command AddEmployeeCommand) (employeePost model.EmployeePost, err error) {
 	if err = command.Valid(); err != nil {
 		return
 	}
@@ -33,14 +33,15 @@ func AddEmployee(ctx context.Context, command AddEmployeeCommand) (employee mode
 		return
 	}
 
-	employee = model.Employee{
+	employee := model.Employee{
 		UID:    uuid.NewString(),
 		Name:   command.Name,
 		DOB:    date,
 		Gender: ToGenderNum(command.Gender),
 	}
 	err = persistence.Employees().Save(ctx, employee)
-	return employee, err
+	employeePost = employee.ToEmployeePost()
+	return
 }
 
 func ToGenderNum(gender string) int {

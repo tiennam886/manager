@@ -70,13 +70,18 @@ func newMySqlEmployeeRepository() (repo EmployeeRepository, err error) {
 func (m mysqlEmployeeRepository) FindByUID(ctx context.Context, uid string) (model.EmployeePost, error) {
 	var employee model.Employee
 
-	stmt := fmt.Sprintf("Select * from %s where uid = %s", m.EmployeeTable, uid)
-	row, err := m.Database.Query(stmt)
+	stmt := fmt.Sprintf("Select * from %s where uid = ?", m.EmployeeTable)
+	row, err := m.Database.Query(stmt, uid)
 	if err != nil {
 		return employee.ToEmployeePost(), err
 	}
-	row.Next()
-	err = row.Scan(&employee.UID, &employee.Name, &employee.Gender, &employee.DOB)
+	if row.Next() {
+		err = row.Scan(&employee.UID, &employee.Name, &employee.Gender, &employee.DOB)
+		if err != nil {
+			return employee.ToEmployeePost(), err
+		}
+	}
+
 	return employee.ToEmployeePost(), err
 }
 

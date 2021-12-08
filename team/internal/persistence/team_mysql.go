@@ -10,8 +10,67 @@ import (
 )
 
 type mysqlTeamRepository struct {
-	Database  *sql.DB
-	TeamTable string
+	Database    *sql.DB
+	TeamTable   string
+	MemberTable string
+}
+
+func (m mysqlTeamRepository) FindAll(ctx context.Context, offset int, limit int) ([]model.Team, error) {
+	qr := fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ? ;", m.TeamTable)
+	all, err := m.Database.Query(qr, limit, (offset-1)*limit)
+	if err != nil {
+		return []model.Team{}, err
+	}
+
+	var teams []model.Team
+	for all.Next() {
+		var team model.Team
+		err = all.Scan(&team.UID, &team.Name, &team.Description)
+		if err != nil {
+			return teams, err
+		}
+		teams = append(teams, team)
+	}
+
+	return teams, nil
+}
+
+func (m mysqlTeamRepository) AddAnEmployee(ctx context.Context, employeeId string, teamId string) error {
+	stmt := fmt.Sprintf("insert into %s (employee_id, team_id) values(?, ?);", m.TeamTable)
+	_, err := m.Database.Exec(stmt, employeeId, teamId)
+	return err
+}
+
+func (m mysqlTeamRepository) FindByTeamId(ctx context.Context, teamId string) ([]string, error) {
+	qr := fmt.Sprintf("SELECT * FROM %s WHERE team_id=? ;", m.MemberTable)
+	all, err := m.Database.Query(qr, teamId)
+	if err != nil {
+		return nil, err
+	}
+
+	var employeeList []string
+	for all.Next() {
+		var tId, employeeId string
+		err = all.Scan(&employeeId, &tId)
+		if err != nil {
+			return employeeList, err
+		}
+		employeeList = append(employeeList, employeeId)
+	}
+
+	return employeeList, nil
+}
+
+func (m mysqlTeamRepository) DeleteByTeamId(ctx context.Context, teamId string) error {
+	stmt := fmt.Sprintf("delete from %s where team_id=?", m.TeamTable)
+	_, err := m.Database.Exec(stmt, teamId)
+	return err
+}
+
+func (m mysqlTeamRepository) DeleteAnEmployee(ctx context.Context, employeeId string, teamId string) error {
+	stmt := fmt.Sprintf("delete from %s where employee_id=? and team_id=? ;", m.TeamTable)
+	_, err := m.Database.Exec(stmt, employeeId, teamId)
+	return err
 }
 
 func newMySqlTeamRepository() (repo TeamRepository, err error) {
@@ -21,8 +80,9 @@ func newMySqlTeamRepository() (repo TeamRepository, err error) {
 	}
 
 	repo = &mysqlTeamRepository{
-		Database:  mySqlDB,
-		TeamTable: config.Get().TeamTable,
+		Database:    mySqlDB,
+		TeamTable:   config.Get().TeamTable,
+		MemberTable: config.Get().TeamMemberTable,
 	}
 	return
 }
