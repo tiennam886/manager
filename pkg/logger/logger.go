@@ -8,7 +8,6 @@ import (
 )
 
 func ConfigZap(level int) *zap.SugaredLogger {
-
 	cfg := zap.Config{
 		Encoding:    "json",
 		Level:       zap.NewAtomicLevelAt(zapcore.Level(level)),

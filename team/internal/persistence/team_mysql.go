@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/tiennam886/manager/team/internal/config"
 	"github.com/tiennam886/manager/team/internal/model"
 )

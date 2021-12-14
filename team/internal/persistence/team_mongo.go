@@ -117,7 +117,7 @@ func (repo *mongoTeamRepository) FindByUID(ctx context.Context, uid string) (mod
 }
 
 func (repo *mongoTeamRepository) Save(ctx context.Context, team model.Team) error {
-	_, err := repo.collection.InsertOne(ctx, team)
+	_, err := repo.collection.InsertOne(ctx, toTeamDocument(team))
 	return err
 }
 

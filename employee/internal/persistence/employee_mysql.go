@@ -18,19 +18,40 @@ type mysqlEmployeeRepository struct {
 }
 
 func (m mysqlEmployeeRepository) DeleteFromTeam(ctx context.Context, employeeId string, teamId string) error {
-	panic("implement me")
+	stmt := fmt.Sprintf("delete from %s where employee_id = ? and team_id = ? ;", m.TeamMemberTable)
+	_, err := m.Database.Exec(stmt, employeeId, teamId)
+	return err
 }
 
 func (m mysqlEmployeeRepository) AddToTeam(ctx context.Context, employeeId string, teamId string) error {
-	panic("implement me")
+	stmt := fmt.Sprintf("insert into %s (employee_id, team_id) values(?, ?);", m.TeamMemberTable)
+	_, err := m.Database.Exec(stmt, employeeId, teamId)
+	return err
 }
 
 func (m mysqlEmployeeRepository) FindByEmployeeId(ctx context.Context, employeeId string) ([]string, error) {
-	panic("implement me")
+	qr := fmt.Sprintf("SELECT * FROM %s where employee_id = ? ;", m.TeamMemberTable)
+	all, err := m.Database.Query(qr, employeeId)
+	if err != nil {
+		return nil, err
+	}
+
+	var teamList []string
+	for all.Next() {
+		var teamId, employeeId string
+		err = all.Scan(&employeeId, &teamId)
+		if err != nil {
+			return nil, err
+		}
+		teamList = append(teamList, teamId)
+	}
+	return teamList, nil
 }
 
 func (m mysqlEmployeeRepository) DeleteByEmployeeId(ctx context.Context, employeeId string) error {
-	panic("implement me")
+	stmt := fmt.Sprintf("delete from %s where employee_id = ? ;", m.TeamMemberTable)
+	_, err := m.Database.Exec(stmt, employeeId)
+	return err
 }
 
 func (m mysqlEmployeeRepository) FindAll(ctx context.Context, offset int, limit int) ([]model.EmployeePost, error) {
@@ -86,19 +107,19 @@ func (m mysqlEmployeeRepository) FindByUID(ctx context.Context, uid string) (mod
 }
 
 func (m mysqlEmployeeRepository) Save(ctx context.Context, employee model.Employee) error {
-	stmt := fmt.Sprintf("insert into %s (uid, name, gender, dob) values(?, ?, ?, ?);", config.Get().EmployeeTable)
+	stmt := fmt.Sprintf("insert into %s (uid, name, gender, dob) values(?, ?, ?, ?);", m.EmployeeTable)
 	_, err := m.Database.Exec(stmt, employee.UID, employee.Name, employee.Gender, employee.DOB)
 	return err
 }
 
 func (m mysqlEmployeeRepository) Update(ctx context.Context, uid string, employee model.Employee) error {
-	stmt := fmt.Sprintf("update %s set name=?, gender=? , dob=? where uid=?", config.Get().EmployeeTable)
+	stmt := fmt.Sprintf("update %s set name=?, gender=? , dob=? where uid=?", m.EmployeeTable)
 	_, err := m.Database.Exec(stmt, employee.Name, employee.Gender, employee.DOB, uid)
 	return err
 }
 
 func (m mysqlEmployeeRepository) Remove(ctx context.Context, uid string) error {
-	stmt := fmt.Sprintf("delete from %s where uid=?", config.Get().EmployeeTable)
+	stmt := fmt.Sprintf("delete from %s where uid=?", m.EmployeeTable)
 	_, err := m.Database.Exec(stmt, uid)
 	return err
 }

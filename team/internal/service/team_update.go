@@ -13,8 +13,8 @@ import (
 type UpdateTeamByUIDCommand string
 
 type UpdateTeamCommand struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name" valid:"required"`
+	Description string `json:"description" valid:"required"`
 }
 
 func (c UpdateTeamByUIDCommand) Valid() error {

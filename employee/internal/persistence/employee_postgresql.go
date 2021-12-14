@@ -82,17 +82,38 @@ func (m postgresqlEmployeeRepository) Remove(ctx context.Context, uid string) er
 }
 
 func (m postgresqlEmployeeRepository) AddToTeam(ctx context.Context, employeeId string, teamId string) error {
-	panic("implement me")
+	stmt := fmt.Sprintf("insert into %s (employee_id, team_id) values($1, $2)", m.TeamMemberTable)
+	_, err := m.Database.Exec(stmt, employeeId, teamId)
+	return err
 }
 
 func (m postgresqlEmployeeRepository) DeleteFromTeam(ctx context.Context, employeeId string, teamId string) error {
-	panic("implement me")
+	stmt := fmt.Sprintf("delete from %s where employee_id=$1 and team_id=$2", m.TeamMemberTable)
+	_, err := m.Database.Exec(stmt, employeeId, teamId)
+	return err
 }
 
 func (m postgresqlEmployeeRepository) FindByEmployeeId(ctx context.Context, employeeId string) ([]string, error) {
-	panic("implement me")
+	qr := fmt.Sprintf("SELECT * FROM %s WHERE employee_id=$1 ;", m.TeamMemberTable)
+	all, err := m.Database.Query(qr, employeeId)
+	if err != nil {
+		return nil, err
+	}
+
+	var teamList []string
+	for all.Next() {
+		var teamId, employeeId string
+		err = all.Scan(&employeeId, &teamId)
+		if err != nil {
+			return nil, err
+		}
+		teamList = append(teamList, teamId)
+	}
+	return teamList, nil
 }
 
 func (m postgresqlEmployeeRepository) DeleteByEmployeeId(ctx context.Context, employeeId string) error {
-	panic("implement me")
+	stmt := fmt.Sprintf("delete from %s where employee_id=$1", m.TeamMemberTable)
+	_, err := m.Database.Exec(stmt, employeeId)
+	return err
 }

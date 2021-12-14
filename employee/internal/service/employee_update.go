@@ -13,9 +13,9 @@ import (
 type UpdateEmployeeByUIDCommand string
 
 type UpdateEmployeeCommand struct {
-	Name   string `json:"name"`
+	Name   string `json:"name" valid:"required"`
 	DOB    string `json:"dob"`
-	Gender string `json:"gender"`
+	Gender string `json:"gender" valid:"required"`
 }
 
 func (c UpdateEmployeeByUIDCommand) Valid() error {

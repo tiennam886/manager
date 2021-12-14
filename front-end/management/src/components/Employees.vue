@@ -5,26 +5,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     
-    <button class="buttonAdd" onclick="document.getElementById('addModal').style.display='block'"><i class="fa fa-plus"></i> ADD NEW EMPLOYEE</button>
+    <button class="buttonAdd" @click="this.renew();" onclick="document.getElementById('addModal').style.display='block'"><i class="fa fa-plus"></i> ADD NEW EMPLOYEE</button>
 
     <div id="addModal" class="w3-modal">
       <div class="w3-modal-content">
       <div class="w3-container">
-        <form class="form">
           <h2>ADD NEW EMPLOYEE</h2>
           <br>
           <label>Name</label>&nbsp;
-          <input type="text" v-model="employee.name" placeholder="Your name.." required="required">
+          <input type="text" v-model="newEmployee.name" placeholder="Your name.." required="required">
           <br><br>
           <label>Birth</label>&nbsp;
-          <input type="date" v-model="employee.dob" required="required">
+          <input type="date" v-model="newEmployee.dob" required="required">
           <br><br>
           <label>Gender</label>&nbsp;
-          <select v-model="employee.gender" required="required"> 
+          <select v-model="newEmployee.gender" required="required"> 
             <option value="male">MALE</option>
             <option value="female">FEMALE</option>
           </select>
-          </form>
+          <br><br>
         <button class="button" @click="this.postItem();" onclick="document.getElementById('addModal').style.display='none';">Register</button>
         <button class="button" onclick="document.getElementById('addModal').style.display='none'">Cancel</button>
       </div>
@@ -34,26 +33,26 @@
     <div id="editModal" class="w3-modal">
     <div class="w3-modal-content">
       <div class="w3-container">
-        <form>
           <h2>EDIT AN EMPLOYEE</h2>
           <br>
-          <label>[NAME] Old: [ {{this.employee.name}} ] &nbsp;&nbsp;&nbsp; New: </label>&nbsp;
-          <input type="text" v-model="newEmployee.name" placeholder="New name.." required>
+          <label>[NAME] </label>&nbsp;
+          <input type="text" v-model="employee.name" placeholder="New name..." required>
+
           <br><br>
-          <label>[BIRTH] Old: [ {{this.employee.dob}} ] &nbsp;&nbsp;&nbsp; New: </label>&nbsp;
-          <input type="date" v-model="newEmployee.dob" required="required">
+          <label>[BIRTH]</label>&emsp;&emsp;&emsp;
+          <input type="date" v-model="employee.dob" required="required">&emsp;&emsp;&emsp;&emsp;
+
           <br><br>
-          <label>[GENDER] Old: [ {{this.employee.gender}} ] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; New: </label>&nbsp;
-          <select v-model="newEmployee.gender" required="required"> 
+          <label>[GENDER]</label>&emsp;&emsp;&emsp;
+          <select v-model="employee.gender" required="required"> 
             <option value="male">MALE</option>
             <option value="female">FEMALE</option>
-          </select>
+          </select>&emsp;&emsp;&emsp;&emsp;&emsp;
+
           <br><br>
 
           <button class="button" @click="this.editItem(this.uid)" onclick="document.getElementById('editModal').style.display='none'">Edit</button>
-          <button class="button" onclick="document.getElementById('editModal').style.display='none'">Cancel</button>
-          </form>
-        
+          <button class="button" onclick="document.getElementById('editModal').style.display='none'">Cancel</button>     
       </div>
     </div>
 
@@ -95,7 +94,7 @@
           <th class="dob">{{item.dob}}</th>
           <th class="option">
             <button class="button" @click="this.$router.push({name:'Employee', params:{uid: item.uid}})"><i class="fa fa-search"></i> Detail</button>
-            <button class="button" @click="this.employee=item; this.uid=item.uid" onclick="document.getElementById('editModal').style.display='block'"><i class="fa fa-edit"></i> Edit</button>
+            <button class="button" @click="this.update(item); this.uid=item.uid;" onclick="document.getElementById('editModal').style.display='block'"><i class="fa fa-edit"></i> Edit</button>
             <button class="button" @click="this.employee=item; this.uid=item.uid" onclick="document.getElementById('delModal').style.display='block'"><i class="fa fa-trash"></i> Delete</button>
           </th>
         </tr>
@@ -138,29 +137,35 @@ export default {
     },
 
     postItem(){
-      axios.post("http://localhost:8082/api/v1/employee/", this.employee).then((res) => {
+      axios.post("http://localhost:8082/api/v1/employee/", this.newEmployee).then((res) => {
         this.list.push(res.data.data);
       }).catch(error => console.error(error));
     },
 
     editItem(uid){
-      axios.patch("http://localhost:8082/api/v1/employee/"+uid, this.newEmployee).then((res) => {
-      console.log(res)}).catch(error => console.error(error));
-      alert("Updating...")
-      var delayInMilliseconds = 1000; 
-      setTimeout(function() {
+      axios.patch("http://localhost:8082/api/v1/employee/"+uid, this.employee).then((res) => {
+        console.log(res)
         location.reload();
-      }, delayInMilliseconds);
+      }).catch(error => console.error(error));
+
     },
 
     deleteItem(uid){
       axios.delete("http://localhost:8082/api/v1/employee/"+uid).then((res) => {
+        this.list = this.list.filter(item => item.uid!=uid)
       console.log(res)}).catch(error => console.error(error));
-      alert("Deleting...")
-      setTimeout(function() {
-        location.reload();
-      }, delayInMilliseconds);
-        var delayInMilliseconds = 1000; 
+    },
+
+    renew(){
+      this.newEmployee.name =null;
+      this.newEmployee.dob =null;
+      this.newEmployee.gender =null;
+    },
+
+    update(old){
+      this.employee.name =new String(old.name);
+      this.employee.dob = new String(old.dob);
+      this.employee.gender = old.gender
     }
 
   },

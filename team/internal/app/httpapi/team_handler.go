@@ -179,6 +179,75 @@ func TeamNotice(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func TeamFindEmployees(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	uid := chi.URLParam(r, "uid")
+	sugarLogger.Infow(fmt.Sprintf("GET /employee/list/%s", uid))
+
+	teamList, err := service.FindTeamsEmployees(r.Context(), service.FindTeamByUIDCommand(uid))
+	if err != nil {
+		sugarLogger.Errorf(err.Error())
+		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	sugarLogger.Infow(fmt.Sprintf("Found employees of team uid= %s", uid))
+	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
+		Message: fmt.Sprintf("Found employees of team uid=%s", uid),
+		Data:    teamList,
+	})
+}
+
+func TeamAddEmployee(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	payload := service.TeamEmployeeCommand{
+		EmployeeId: chi.URLParam(r, "eid"),
+		TeamId:     chi.URLParam(r, "tid"),
+	}
+
+	err := service.AddEmployeeToTeam(r.Context(), payload)
+	if err != nil {
+		sugarLogger.Errorf(err.Error())
+		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	sugarLogger.Infow(fmt.Sprintf("staff uid=%s was added to team uid=%s", payload.EmployeeId, payload.TeamId))
+	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
+		Message: fmt.Sprintf("staff uid=%s was added to team uid=%s", payload.EmployeeId, payload.TeamId),
+		Data:    payload,
+	})
+}
+
+func TeamRemoveAnEmployee(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	payload := service.TeamEmployeeCommand{
+		EmployeeId: chi.URLParam(r, "eid"),
+		TeamId:     chi.URLParam(r, "tid"),
+	}
+
+	err := service.DeleteEmployeeFromTeam(r.Context(), payload)
+	if err != nil {
+		sugarLogger.Errorf(err.Error())
+		httputil.ResponseError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	sugarLogger.Infow(fmt.Sprintf("staff uid=%s was removed from team uid=%s", payload.EmployeeId, payload.TeamId))
+	_ = httputil.WriteJsonOK(w, httputil.ResponseBody{
+		Message: fmt.Sprintf("staff uid=%s was removed from team uid=%s", payload.EmployeeId, payload.TeamId),
+		Data:    payload,
+	})
+}
 func TeamOption(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

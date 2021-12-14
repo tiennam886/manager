@@ -11,8 +11,8 @@ import (
 )
 
 type AddTeamCommand struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name" valid:"required"`
+	Description string `json:"description" valid:"required"`
 }
 
 func (c AddTeamCommand) Valid() error {

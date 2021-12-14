@@ -37,19 +37,20 @@ func (e TeamRepo) FindAll(ctx context.Context, offset int, limit int) ([]model.T
 }
 
 func (e TeamRepo) AddAnEmployee(ctx context.Context, employeeId string, teamId string) error {
-	panic("implement me")
+	return e.TeamDB.AddAnEmployee(ctx, employeeId, teamId)
 }
 
 func (e TeamRepo) FindByTeamId(ctx context.Context, teamId string) ([]string, error) {
-	panic("implement me")
+	data, err := e.TeamDB.FindByTeamId(ctx, teamId)
+	return data, err
 }
 
 func (e TeamRepo) DeleteByTeamId(ctx context.Context, teamId string) error {
-	panic("implement me")
+	return e.TeamDB.DeleteByTeamId(ctx, teamId)
 }
 
 func (e TeamRepo) DeleteAnEmployee(ctx context.Context, employeeId string, teamId string) error {
-	panic("implement me")
+	return e.TeamDB.DeleteAnEmployee(ctx, employeeId, teamId)
 }
 
 func (e TeamRepo) FindByUID(ctx context.Context, uid string) (model.Team, error) {
@@ -81,6 +82,11 @@ func (e TeamRepo) Remove(ctx context.Context, uid string) error {
 	err := e.TeamDB.Remove(ctx, uid)
 	if err != nil {
 		return err
+	}
+
+	err = e.TeamDB.DeleteByTeamId(ctx, uid)
+	if err != nil {
+		fmt.Println(err.Error())
 	}
 
 	return e.TeamCache.Remove(ctx, uid)

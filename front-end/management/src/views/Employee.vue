@@ -16,13 +16,13 @@
 
       <div>
         <div class="add">
-          <button class="button" @click="this.getTeams()" onclick="document.getElementById('addModal').style.display='block'"><i class="fa fa-plus"></i> ADD TO NEW TEAM</button>
-          <button class="button" onclick="document.getElementById('editModal').style.display='block'"><i class="fa fa-edit"></i> Edit</button>
+          <button class="button" onclick="document.getElementById('addModal').style.display='block'"><i class="fa fa-plus"></i> ADD TO NEW TEAM</button>
+          <button class="button" @click="this.update(this.employee);" onclick="document.getElementById('editModal').style.display='block'"><i class="fa fa-edit"></i> Edit</button>
           <button class="button" onclick="document.getElementById('delModal').style.display='block'"><i class="fa fa-trash"></i> Delete</button>
               
-              <div id="addModal" class="w3-modal">
+              <div id="addModal" class="w3-modal" >
                 <div class="w3-modal-content">
-                <div class="w3-container">
+                <div class="w3-container" v-if="teams.length!=0">
                 <table class="table">
                   <thead>
                     <tr>
@@ -55,33 +55,38 @@
                     </tr>
                   </tbody>
                 </table>                 
-                  <button class="button" onclick="document.getElementById('addModal').style.display='none'">Cancel</button>
                 </div>
+                <div class="w3-container" v-else><br><br><br><h2>This employee is in all teams</h2><br><br><br></div>
+                <button class="button" onclick="document.getElementById('addModal').style.display='none'">Cancel</button>
+
                 </div>
               </div>
 
               <div id="editModal" class="w3-modal">
                 <div class="w3-modal-content">
                   <div class="w3-container">
-                    <form>
+
                       <h2>EDIT AN EMPLOYEE</h2>
                       <br>
-                      <label>[NAME] Old:  {{this.employee.name}}  &nbsp;&nbsp;&nbsp; New: </label>&nbsp;
+                      <label>[NAME]</label>&nbsp;
                       <input type="text" v-model="newEmployee.name" placeholder="New name.." required>
+                      
                       <br><br>
-                      <label>[BIRTH] Old:  {{this.employee.dob}}  &nbsp;&nbsp;&nbsp; New: </label>&nbsp;
+                      <label>[BIRTH]</label>&nbsp;
                       <input type="date" v-model="newEmployee.dob" required="required">
+                                                        
                       <br><br>
-                      <label>[GENDER] Old:  {{this.employee.gender}}  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; New: </label>&nbsp;
+                      <label>[GENDER] </label>&nbsp;
                       <select v-model="newEmployee.gender" required="required"> 
                         <option value="male">MALE</option>
                         <option value="female">FEMALE</option>
                       </select>
+
                       <br><br>
 
                       <button class="button" @click="this.editItem(this.employee.uid)" onclick="document.getElementById('editModal').style.display='none'">Edit</button>
                       <button class="button" onclick="document.getElementById('editModal').style.display='none'">Cancel</button>
-                    </form>     
+    
                   </div>
                 </div>
               </div>
@@ -97,17 +102,18 @@
                     <br><br>
                     <label>Gender: {{this.employee.gender}} </label> 
                     <br><br>
-                    <button class="button" @click="this.deleteItem(this.employee.uid)" onclick="document.getElementById('delModal').style.display='none'">Delete</button>
+                    <button class="button" @click="this.deleteItem(this.employee.uid);this.$router.push({name:'Employees'});" onclick="document.getElementById('delModal').style.display='none'">Delete</button>
                     <button class="button" onclick="document.getElementById('delModal').style.display='none'">Cancel</button>      
                 </div>
               </div>
               </div> 
-
-                <table class="table">
+        </div>
+        <div v-if="list.length!=0">
+                <table class="teamList">
                   <thead>
                     <tr>
                       <th class="id">ID</th>
-                      <th class="name">NAME</th>
+                      <th class="name">JOINED TEAM</th>
                       <th class="description">DESCRIPTION</th>
                       <th class="option">OPTIONS</th>
                     </tr>
@@ -118,13 +124,28 @@
                       <th class="name">{{item.name}}</th>
                       <th class="description">{{item.description}}</th>
                       <th class="option">
-                        <button class="button" @click="this.chosenTeam=item;" onclick="document.getElementById('confirmAddModal').style.display='block'">
-                          <i class="fa fa-plus"></i> Add</button>
+                        <button class="button" @click="this.$router.push({name:'Team', params:{uid: item.uid}})"><i class="fa fa-search"></i> Detail</button>
+                        <button class="button" @click="this.chosenTeam=item;" onclick="document.getElementById('confirmLeaveModal').style.display='block'">
+                          <i class="fa fa-remove"></i> Leave</button>
+                            <div id="confirmLeaveModal" class="w3-modal">
+                              <div class="w3-modal-content">
+                                <h2> <b>LEAVE TEAM</b> </h2>
+                    
+                                <h5>Do you want to let this employee leave  <b>{{chosenTeam.name}}</b></h5>
+                                <br>
+                                <button class="button" @click="this.leaveTeam(employee.uid, chosenTeam.uid)" 
+                                onclick="document.getElementById('confirmLeaveModal').style.display='none';">Confirm</button>
+                                <button class="button" onclick="document.getElementById('confirmLeaveModal').style.display='none'">Cancel</button>                            
+                              </div>
+                            </div>                          
                       </th>
                     </tr>
                   </tbody>
-                </table>     
-        </div>
+
+                </table>
+               
+      </div>
+      <div v-else class="teamList"><h1>This employee is not in any teams.</h1></div>    
       </div>
     </div>
     </body>
@@ -143,13 +164,14 @@ export default {
         dob: null,
       },
       employee: null,
-      teams: null,
+      teams: [],
       chosenTeam: {
         uid: null,
         name: null,
         description: null,
       },
       list: [],
+      teamList: [],
     }
   },
   methods: {
@@ -159,53 +181,63 @@ export default {
         this.employee = response.data.data;
       })
     },
+
     getTeams(){
       axios.get("http://localhost:8081/api/v1/team/")
       .then((response) => {
-        this.teams = Array.isArray(response.data.data)? response.data.data: [];
+        const allTeams = Array.isArray(response.data.data)? response.data.data: [];
+        
+        axios.get("http://localhost:8082/api/v1/employee/list/"+this.$route.params.uid)
+        .then((response) => {
+          this.teamList = Array.isArray(response.data.data)? response.data.data: [];
+          this.teams = allTeams.filter(item => !this.teamList.includes(item.uid));
+          this.list = allTeams.filter(item => this.teamList.includes(item.uid));      
+        });
+  
+
+
       }).catch(error => console.error(error));
-    },   
+    },
+
     editItem(uid){
       axios.patch("http://localhost:8082/api/v1/employee/"+uid, this.newEmployee).then((res) => {
-      console.log(res)}).catch(error => console.error(error));
-      alert("Updating...")
-      var delayInMilliseconds = 1000; 
-      setTimeout(function() {
-        location.reload();
-      }, delayInMilliseconds);
+      this.employee = this.newEmployee;  
+      console.log(res)
+      }).catch(error => console.error(error));
+      
     }, 
+
     deleteItem(uid){
       axios.delete("http://localhost:8082/api/v1/employee/"+uid).then((res) => {
-      console.log(res)}).catch(error => console.error(error));
-      alert("Deleting...")
-
-      var delayInMilliseconds = 1000;
-      setTimeout(function() {
-        this.$route.push({name:"Employees"});
-      }, delayInMilliseconds);
+      console.log(res)
+      }).catch(error => console.error(error));
+      alert("Deleting...");
     },
+
     addToTeam(eid, tid){
       axios.post("http://localhost:8082/api/v1/employee/"+eid+"/team/"+tid).then((res) => {
       console.log(res)}).catch(error => console.error(error));
+      this.list.push(this.chosenTeam);
+      this.teams = this.teams.filter(item => item.uid!=tid)
     },
-    getList(){
-      axios.get("http://localhost:8082/api/v1/employee/list/"+this.$route.params.uid)
-      .then((response) => {
-        const teamList = Array.isArray(response.data.data)? response.data.data: [];
 
-        for( let value of teamList) {
-          axios.get(`http://localhost:8081/api/v1/team/${value}`)
-          .then((res) => {       
-            this.list.push(res.data.data)
-            }); 
-        }
-      })
-    }  
+    leaveTeam(eid, tid){
+      axios.delete("http://localhost:8082/api/v1/employee/"+eid+"/team/"+tid).then((res) => {
+      console.log(res)}).catch(error => console.error(error));
+      this.teams.push(this.chosenTeam);
+      this.list = this.list.filter(item => item.uid!=tid);
+    },
+
+    update(old){
+      this.newEmployee.name =new String(old.name);
+      this.newEmployee.dob = new String(old.dob);
+      this.newEmployee.gender = old.gender
+    }
   },
-  created() {
+  mounted() {
     this.getItem();
-    this.getList();
-  }
+    this.getTeams();
+  },
 }
 </script>
 <style scoped lang="scss">
@@ -268,11 +300,11 @@ thead {
 }
 
 .description{
-  width: 35%;
+  width: 30%;
 }
 
 .option{
-  width: 20%;
+  width: 25%;
 }
 
 .button {
@@ -295,7 +327,14 @@ thead {
 
 .add{
   position: absolute;
-  top: 10%;
+  top: 15%;
   right: 5%;
+}
+
+.teamList{
+  position: absolute;
+  margin-top: 10%;
+  width: 60%;
+  margin-left: 10%;
 }
 </style>

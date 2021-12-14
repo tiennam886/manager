@@ -31,14 +31,20 @@ func v1(r *chi.Mux) {
 		})
 		r.Route("/team", func(r chi.Router) {
 			r.Post("/", TeamAdd)
+			r.Post("/{tid}/employee/{eid}", TeamAddEmployee)
+
 			r.Get("/{uid}", TeamFindByUID)
 			r.Get("/", TeamGetAll)
+			r.Get("/list/{uid}", TeamFindEmployees)
 
 			r.Patch("/{uid}", TeamUpdateByUID)
+
 			r.Delete("/{uid}", TeamDeleteByUID)
+			r.Delete("/{tid}/employee/{eid}", TeamRemoveAnEmployee)
 
 			r.Options("/", TeamOption)
 			r.Options("/{param}", TeamOption)
+			r.Options("/{tid}/employee/{eid}", TeamOption)
 
 			r.Get("/notice", TeamNotice)
 		})
