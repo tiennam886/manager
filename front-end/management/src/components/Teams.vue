@@ -124,7 +124,7 @@ export default {
     },
 
     editItem(uid){
-      axios.patch(`http://localhost:8081/api/v1/team/${uid}`, this.newTeam).then((res) => {
+      axios.patch(`http://localhost:8081/api/v1/team/${uid}`, this.team).then((res) => {
       alert("Updating...")
       location.reload();
 
