@@ -1,0 +1,39 @@
+version: '3.8'
+services: 
+  employee:
+    container_name: employee
+    restart: always
+    build: ./employee
+    ports: 
+      - "8082:8082"
+    depends_on: 
+      - mongo
+  team:
+    container_name: team
+    restart: always
+    build: ./team
+    ports: 
+      - "8081:8081"
+    depends_on: 
+      - mongo      
+  client:
+    container_name: client
+    restart: always
+    build: ./front-end/management
+    ports: 
+      - "8080:8080"
+    depends_on: 
+      - employee
+      - team
+  mongo:
+    container_name: mongo-backend
+    image: mongo
+    expose: 
+      - "27017"
+    ports: 
+      - "27007:27017"
+    volumes: 
+      - apiDB:/data/db
+
+volumes: 
+  apiDB:
