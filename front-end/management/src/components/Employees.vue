@@ -127,7 +127,7 @@ export default {
   },
   methods: {
     getItem(){
-      axios.get("http://localhost:8082/api/v1/employee/")
+      axios.get(`${process.env.VUE_APP_EMPLOYEE_URL}/api/v1/employee/`)
       .then((response) => {
         this.list = Array.isArray(response.data.data)? response.data.data: [];
         console.log(this.list);
@@ -137,13 +137,13 @@ export default {
     },
 
     postItem(){
-      axios.post("http://localhost:8082/api/v1/employee/", this.newEmployee).then((res) => {
+      axios.post(`${process.env.VUE_APP_EMPLOYEE_URL}/api/v1/employee/`, this.newEmployee).then((res) => {
         this.list.push(res.data.data);
       }).catch(error => console.error(error));
     },
 
     editItem(uid){
-      axios.patch("http://localhost:8082/api/v1/employee/"+uid, this.employee).then((res) => {
+      axios.patch(`${process.env.VUE_APP_EMPLOYEE_URL}/api/v1/employee/${uid}`, this.employee).then((res) => {
         console.log(res)
         location.reload();
       }).catch(error => console.error(error));
@@ -151,7 +151,7 @@ export default {
     },
 
     deleteItem(uid){
-      axios.delete("http://localhost:8082/api/v1/employee/"+uid).then((res) => {
+      axios.delete(`${process.env.VUE_APP_EMPLOYEE_URL}/api/v1/employee/${uid}`).then((res) => {
         this.list = this.list.filter(item => item.uid!=uid)
       console.log(res)}).catch(error => console.error(error));
     },

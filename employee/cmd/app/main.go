@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/tiennam886/manager/employee/internal/service"
 	"os"
 	"time"
+
+	"github.com/tiennam886/manager/employee/internal/service"
 
 	"github.com/tiennam886/manager/employee/internal/app/httpapi"
 	"github.com/tiennam886/manager/employee/internal/config"
@@ -42,7 +43,7 @@ func main() {
 				&cli.StringFlag{
 					Name:    "addr",
 					Aliases: []string{"address"},
-					Value:   "localhost:8082",
+					Value:   "employee:8082",
 					Usage:   "specify which address to serve on",
 				},
 				&cli.StringFlag{

@@ -110,21 +110,21 @@ export default {
   },
   methods: {
     getItem(){
-      axios.get("http://localhost:8081/api/v1/team/")
+      axios.get(`${process.env.VUE_APP_TEAM_URL}/api/v1/team/`)
       .then((response) => {
         this.list = Array.isArray(response.data.data)? response.data.data: [];
         console.log(this.list);
       }).catch(error => console.error(error));
     },
-
+    
     postItem(){
-      axios.post("http://localhost:8081/api/v1/team/", this.newTeam).then((res) => {
+      axios.post(`${process.env.VUE_APP_TEAM_URL}/api/v1/team/`, this.newTeam).then((res) => {
         this.list.push(res.data.data);
       }).catch(error => console.error(error));
     },
 
     editItem(uid){
-      axios.patch(`http://localhost:8081/api/v1/team/${uid}`, this.team).then((res) => {
+      axios.patch(`${process.env.VUE_APP_TEAM_URL}/api/v1/team/${uid}`, this.team).then((res) => {
       alert("Updating...")
       location.reload();
 
@@ -134,7 +134,7 @@ export default {
     },
 
     deleteItem(uid){
-      axios.delete("http://localhost:8081/api/v1/team/"+uid).then((res) => {
+      axios.delete(`${process.env.VUE_APP_TEAM_URL}/api/v1/team/${uid}`).then((res) => {
         console.log(res);
         this.list = this.list.filter(item => item.uid!=uid);
         
