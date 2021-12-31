@@ -1,37 +1,78 @@
 version: '3.8'
+
 services: 
   employee:
     container_name: employee
     restart: always
     build: ./employee
-    ports: 
-      - "8082:8082"
     depends_on: 
       - mongo
+      - redis
+    links:
+      - mongo
+      - redis
+
   team:
     container_name: team
     restart: always
     build: ./team
-    ports: 
-      - "8081:8081"
     depends_on: 
-      - mongo      
+      - mongo
+      - redis
+    links:
+      - mongo
+      - redis      
+
   client:
     container_name: client
     restart: always
     build: ./front-end/management
     ports: 
-      - "8080:8080"
+      - "8080:80"
     depends_on: 
       - employee
       - team
+
   mongo:
     container_name: mongo
     image: mongo
-    ports: 
-      - "27017:27017"
+
     volumes: 
       - apiDB:/data/db
 
+  redis:
+    image: redis:6.0.3-alpine
+    container_name: "redis"
+
+    restart: always
+
 volumes: 
   apiDB:
+
+
+  # mysql:
+  #   image: mysql:5.7
+  #   volumes:
+  #     - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+  #     - mysql_data:/var/lib/mysql
+  #   ports:
+  #     - "3306:3306"
+  #   restart: always
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: password
+  #     MYSQL_DATABASE: app
+  #     MYSQL_USER: namtt
+  #     MYSQL_PASSWORD: password
+
+  # postgresql:
+  #   image: postgres
+  #   container_name: postgresql
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_USER=namtt
+  #     - POSTGRES_PASSWORD=password
+  #   volumes:
+  #     - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+  #     - postgresql_data:/var/lib/mysql
+  #   restart: always

@@ -3,12 +3,13 @@ package httpapi
 import (
 	"context"
 	"fmt"
-	"github.com/tiennam886/manager/pkg/logger"
-	"github.com/tiennam886/manager/team/internal/config"
 	"log"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/tiennam886/manager/pkg/logger"
+	"github.com/tiennam886/manager/team/internal/config"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -18,6 +19,7 @@ func v1(r *chi.Mux) {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(middleware.Timeout(30 * time.Second))
 		r.Use(middleware.Recoverer)
+		r.Use(middleware.Logger)
 		r.Use(func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")

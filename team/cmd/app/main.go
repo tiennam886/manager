@@ -24,7 +24,7 @@ func main() {
 		&cli.StringFlag{
 			Name:    "env",
 			Aliases: []string{"e"},
-			Value:   "../../configs/.env",
+			Value:   "configs/.env",
 			Usage:   "set path to environment file",
 		},
 		&cli.StringFlag{

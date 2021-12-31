@@ -167,18 +167,18 @@ export default {
   },
   methods: {
     getItem(){
-      axios.get(`${process.env.VUE_APP_TEAM_URL}/api/v1/team/${this.$route.params.uid}`)
+      axios.get(`/api/v1/team/${this.$route.params.uid}`)
       .then((response) => {
         this.team = response.data.data;
       })
     },
 
     getTeams(){
-      axios.get(`${process.env.VUE_APP_EMPLOYEE_URL}/api/v1/employee/`)
+      axios.get(`/api/v1/employee/`)
       .then((response) => {
         const allTeams = Array.isArray(response.data.data)? response.data.data: [];
         
-        axios.get(`${process.env.VUE_APP_TEAM_URL}/api/v1/team/list/${this.$route.params.uid}`)
+        axios.get(`/api/v1/team/list/${this.$route.params.uid}`)
         .then((response) => {
           this.employeeList = Array.isArray(response.data.data)? response.data.data: [];
           this.employees = allTeams.filter(item => !this.employeeList.includes(item.uid));
@@ -189,26 +189,26 @@ export default {
     },  
 
     editItem(uid){
-      axios.patch(`${process.env.VUE_APP_TEAM_URL}/api/v1/team/${uid}`, this.newTeam).then((res) => {
+      axios.patch(`/api/v1/team/${uid}`, this.newTeam).then((res) => {
       console.log(res)}).catch(error => console.error(error));
       this.team = this.newTeam;
     },
 
     deleteItem(uid){
-      axios.delete(`${process.env.VUE_APP_TEAM_URL}/api/v1/team/${uid}`).then((res) => {
+      axios.delete(`/api/v1/team/${uid}`).then((res) => {
       console.log(res)}).catch(error => console.error(error));
       alert("Deleting...")
     },
 
     addToTeam(tid, eid){
-      axios.post(`${process.env.VUE_APP_TEAM_URL}/api/v1/team/${tid}/employee/${eid}`).then((res) => {
+      axios.post(`/api/v1/team/${tid}/employee/${eid}`).then((res) => {
       console.log(res)}).catch(error => console.error(error));
       this.list.push(this.chosenEmployee);
       this.employees = this.employees.filter(item => item.uid!=eid)
     },
 
     leaveTeam(tid, eid){
-      axios.delete(`${process.env.VUE_APP_TEAM_URL}/api/v1/team/${tid}/employee/${eid}`).then((res) => {
+      axios.delete(`/api/v1/team/${tid}/employee/${eid}`).then((res) => {
       console.log(res)}).catch(error => console.error(error));
       this.employees.push(this.chosenEmployee);
       this.list = this.list.filter(item => item.uid!=eid);

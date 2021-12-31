@@ -18,6 +18,8 @@ func v1(r *chi.Mux) {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(middleware.Timeout(30 * time.Second))
 		r.Use(middleware.Recoverer)
+		r.Use(middleware.Logger)
+
 		r.Use(func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")

@@ -1,15 +1,21 @@
-FROM golang:1.17-alpine
+#Build stage
+FROM golang:1.17-alpine AS builder
 
-WORKDIR /team
-
-COPY go.mod .
-
-COPY go.sum .
-
-RUN go mod tidy
+WORKDIR /app
 
 COPY . .
 
 RUN go build -o team cmd/app/main.go
 
-CMD ["./team", "--env=configs/.env", "serve"]
+#Run stage
+
+FROM alpine
+WORKDIR /app
+
+COPY --from=builder /app/team .
+
+COPY --from=builder /app/configs/.env .
+
+EXPOSE 8081
+
+CMD ["./team","--env=./.env", "serve"]
